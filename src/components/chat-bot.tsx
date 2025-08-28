@@ -6,23 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { askChatbot } from "@/app/chat/actions";
+import { askChatbot, type ChatMessage } from "@/app/chat/actions";
 
-type Message = {
-  id: number;
-  text: string;
-  sender: "user" | "bot";
-};
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 1,
-      text: "¡Hola! Soy tu asistente virtual. ¿Cómo puedo ayudarte con nuestros productos médicos?",
-      sender: "bot",
+      role: "model",
+      content: "¡Hola! Soy tu asistente virtual. ¿Cómo puedo ayudarte con nuestros productos médicos?",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -33,36 +27,37 @@ export default function ChatBot() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        setTimeout(() => {
+            scrollAreaRef.current!.parentElement!.scrollTop = scrollAreaRef.current!.scrollHeight;
+        }, 100);
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now(),
-      text: inputValue,
-      sender: "user",
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: inputValue,
     };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInputValue("");
     setIsLoading(true);
 
     try {
-      const botResponseText = await askChatbot(inputValue);
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        text: botResponseText,
-        sender: "bot",
+      const botResponseText = await askChatbot(newMessages);
+      const botMessage: ChatMessage = {
+        role: "model",
+        content: botResponseText,
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        text: "Lo siento, algo salió mal. Por favor, inténtalo de nuevo.",
-        sender: "bot",
+      const errorMessage: ChatMessage = {
+        role: "model",
+        content: "Lo siento, algo salió mal. Por favor, inténtalo de nuevo.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -97,15 +92,15 @@ export default function ChatBot() {
           <CardContent className="p-4 flex-grow overflow-hidden">
             <ScrollArea className="h-full" ref={scrollAreaRef}>
               <div className="space-y-4 pr-4">
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <div
-                    key={message.id}
+                    key={index}
                     className={cn(
                       "flex items-end gap-2",
-                      message.sender === "user" ? "justify-end" : "justify-start"
+                      message.role === "user" ? "justify-end" : "justify-start"
                     )}
                   >
-                    {message.sender === "bot" && (
+                    {message.role === "model" && (
                        <Avatar className="h-8 w-8">
                          <AvatarFallback className="bg-accent text-accent-foreground">
                            <Bot className="h-5 w-5"/>
@@ -115,12 +110,12 @@ export default function ChatBot() {
                      <div
                       className={cn(
                         "max-w-[80%] rounded-lg p-3 text-sm",
-                        message.sender === "user"
+                        message.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
-                      {message.text}
+                      {message.content}
                     </div>
                   </div>
                 ))}
