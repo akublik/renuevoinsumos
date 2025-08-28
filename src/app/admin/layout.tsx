@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeartPulse, Package, Home } from "lucide-react";
+import { HeartPulse, Package, Home, FileText } from "lucide-react";
 import Header from "@/components/header";
 
 export default function AdminLayout({
@@ -14,9 +14,13 @@ export default function AdminLayout({
             <aside className="w-64 bg-gray-50 border-r p-4 hidden md:block">
                 <nav className="flex flex-col gap-2">
                     <h3 className="font-semibold text-lg mb-2 font-headline">Administración</h3>
-                    <Link href="/admin/products" className="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-primary transition-all hover:text-primary">
+                    <Link href="/admin/products" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
                         <Package className="h-4 w-4" />
                         Productos
+                    </Link>
+                     <Link href="/admin/pages" className="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-primary transition-all hover:text-primary">
+                        <FileText className="h-4 w-4" />
+                        Páginas
                     </Link>
                     <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
                         <Home className="h-4 w-4" />
