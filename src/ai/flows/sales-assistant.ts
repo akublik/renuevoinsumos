@@ -44,10 +44,10 @@ const prompt = ai.definePrompt({
   Basado en la conversación, responde a la última pregunta del usuario. Sé conversacional y servicial. Si no sabes la respuesta o el producto no está en la lista, dilo amablemente y ofrece ayuda para encontrar otra cosa. No inventes productos.
 
   {{#each history}}
-  {{#if (eq this.role 'user')}}
-  Usuario: {{{this.content}}}
+  {{#if (eq role 'user')}}
+  Usuario: {{{content}}}
   {{else}}
-  Asistente: {{{this.content}}}
+  Asistente: {{{content}}}
   {{/if}}
   {{/each}}
   `,
