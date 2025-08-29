@@ -3,20 +3,10 @@ import Footer from '@/components/footer';
 import Image from 'next/image';
 import { Truck, ShieldCheck, Award } from 'lucide-react';
 import type { AboutPageContent } from '@/lib/page-content-types';
+import { aboutPageContent } from '@/lib/page-content-data';
 
-
-const content: AboutPageContent = {
-  heroTitle: "Nuestra Misión es tu Bienestar",
-  heroSubtitle: "Comprometidos con la salud, ofrecemos insumos médicos de la más alta calidad para profesionales y el público en general.",
-  aboutTitle: "Sobre Insumos Online",
-  aboutDescription: "Desde nuestra fundación, nos hemos dedicado a ser el puente entre la innovación médica y quienes la necesitan. Seleccionamos cuidadosamente cada producto, asegurando que cumpla con los estándares más rigurosos de calidad y seguridad. Nuestro equipo de expertos está siempre disponible para brindar asesoramiento y garantizar que encuentres exactamente lo que buscas. Creemos en un servicio al cliente excepcional, precios justos y una logística eficiente para que recibas tus insumos a tiempo, siempre.",
-  value1Title: "Calidad Superior",
-  value1Desc: "Solo ofrecemos productos que cumplen con las más altas certificaciones de calidad y seguridad.",
-  value2Title: "Confianza y Seguridad",
-  value2Desc: "Tu salud es nuestra prioridad. Garantizamos la procedencia y efectividad de cada insumo.",
-  value3Title: "Servicio Eficiente",
-  value3Desc: "Procesamos y enviamos tus pedidos con la mayor rapidez para que nunca te falte lo que necesitas."
-};
+// Content is now sourced from a local file to avoid Firestore dependency on public pages.
+const content: AboutPageContent = aboutPageContent;
 
 export default function AboutPage() {
   return (

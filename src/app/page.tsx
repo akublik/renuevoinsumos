@@ -6,18 +6,10 @@ import ProductCard from '@/components/product-card';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import type { HomePageContent } from '@/lib/page-content-types';
+import { homePageContent } from '@/lib/page-content-data';
 
-// Default content is used as the primary source now to avoid Firestore dependency on public pages.
-const content: HomePageContent = {
-  heroTitle: "Insumos Médicos de Calidad a tu Alcance",
-  heroSubtitle: "Explora nuestro catálogo completo de insumos médicos para profesionales y público en general. Confianza y calidad en cada producto.",
-  heroButtonText: "Ver Productos",
-  whyTitle: "¿Por qué elegirnos?",
-  whyDescription: "Ofrecemos una amplia gama de productos médicos de alta calidad, con un servicio al cliente excepcional y entregas rápidas y seguras. Nuestro compromiso es con tu salud y bienestar.",
-  whyPoint1: "Calidad Garantizada: Solo trabajamos con las mejores marcas y productos certificados.",
-  whyPoint2: "Precios Competitivos: Insumos de primera necesidad a precios justos para todos.",
-  whyPoint3: "Asesoramiento Experto: Nuestro equipo está listo para ayudarte a encontrar lo que necesitas."
-};
+// Content is now sourced from a local file to avoid Firestore dependency on public pages.
+const content: HomePageContent = homePageContent;
 
 
 export default function Home() {
