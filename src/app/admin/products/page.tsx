@@ -57,7 +57,7 @@ export default function AdminProductsPage() {
         name,
         brand,
         description,
-        category,
+        category, // Corrected: Pass the category string directly
         price: parseFloat(price),
         stock: parseInt(stock, 10),
         color: color || undefined,
