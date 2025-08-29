@@ -1,0 +1,22 @@
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to everyone
+    match /{allPaths=**} {
+      allow read;
+    }
+
+    // Allow write access only for product images and tech sheets
+    match /products/{fileName} {
+      allow write: if request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    match /tech-sheets/{fileName} {
+      allow write: if request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType == 'application/pdf';
+    }
+  }
+}
