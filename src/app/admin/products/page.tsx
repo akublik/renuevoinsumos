@@ -41,6 +41,11 @@ export default function AdminProductsPage() {
     setSize('');
     setImageFile(null);
     setPdfFile(null);
+    // Reset file input fields visually
+    const imageInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+    if (imageInput) imageInput.value = '';
+    const pdfInput = document.querySelector('input[type="file"][accept=".pdf"]') as HTMLInputElement;
+    if (pdfInput) pdfInput.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,18 +72,23 @@ export default function AdminProductsPage() {
         size: size || undefined,
       };
       
-      await addProduct(productData, imageFile, pdfFile);
+      const docId = await addProduct(productData, imageFile, pdfFile);
 
-      toast({
-        title: '¡Producto Guardado!',
-        description: `El producto "${name}" se ha agregado correctamente.`,
-      });
-      resetForm();
+      if (docId) {
+        toast({
+          title: '¡Producto Guardado!',
+          description: `El producto "${name}" se ha agregado correctamente.`,
+        });
+        resetForm();
+      } else {
+         throw new Error("La función addProduct no retornó un ID de documento.");
+      }
+
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       toast({
         title: 'Error al guardar',
-        description: 'Hubo un problema al intentar guardar el producto. Revisa la consola para más detalles.',
+        description: `Hubo un problema al guardar el producto: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: 'destructive',
       });
     } finally {
@@ -89,6 +99,8 @@ export default function AdminProductsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    } else {
+      setFile(null);
     }
   };
 
@@ -106,18 +118,20 @@ export default function AdminProductsPage() {
       const result = await addProductsFromCSV(csvFile);
       toast({
         title: 'Importación CSV completada',
-        description: `${result.successCount} productos importados. ${result.errorCount} errores.`,
+        description: `${result.successCount} productos importados. ${result.errorCount} errores. Revisa la consola para más detalles.`,
       });
     } catch (error) {
       console.error("Error importing CSV:", error);
       toast({
         title: 'Error en la importación',
-        description: 'Hubo un problema al procesar el archivo CSV. Revisa la consola.',
+        description: `Hubo un problema al procesar el archivo CSV: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: 'destructive',
       });
     } finally {
       setIsUploadingCsv(false);
       setCsvFile(null);
+      const csvInput = document.querySelector('input[type="file"][accept=".csv"]') as HTMLInputElement;
+      if (csvInput) csvInput.value = '';
     }
   };
   
@@ -184,7 +198,7 @@ export default function AdminProductsPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nombre del Producto</Label>
-                <Input id="name" placeholder="Ej: Guantes de Nitrilo" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input id="name" placeholder="Ej: Guantes de Nitrilo" value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="brand">Marca</Label>
@@ -198,7 +212,7 @@ export default function AdminProductsPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="category">Categoría</Label>
-                <Select onValueChange={(value: Product['category']) => setCategory(value)} value={category}>
+                <Select onValueChange={(value: Product['category']) => setCategory(value)} value={category} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
@@ -212,11 +226,11 @@ export default function AdminProductsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Precio</Label>
-                <Input id="price" type="number" placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
+                <Input id="price" type="number" placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="stock">Stock</Label>
-                <Input id="stock" type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} />
+                <Input id="stock" type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} required />
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
@@ -231,7 +245,7 @@ export default function AdminProductsPage() {
             </div>
             <div className="grid gap-2">
               <Label>Imágen del Producto</Label>
-              <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setImageFile)} className="cursor-pointer"/>
+              <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setImageFile)} className="cursor-pointer" required/>
               {imageFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {imageFile.name}</p>}
             </div>
             <div className="grid gap-2">
