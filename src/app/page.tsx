@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { products } from '@/lib/products';
 import ProductCard from '@/components/product-card';
-import ChatBot from '@/components/chat-bot';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 
@@ -76,7 +75,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <ChatBot />
       <Footer />
     </div>
   );
