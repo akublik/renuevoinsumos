@@ -20,10 +20,16 @@ const defaultContent: AboutPageContent = {
 };
 
 export default async function AboutPage() {
-  let content = await getPageContent<AboutPageContent>('about');
-  if (!content) {
+  let content: AboutPageContent;
+  
+  try {
+    const pageContent = await getPageContent<AboutPageContent>('about');
+    content = pageContent || defaultContent;
+  } catch (error) {
+    console.error("Failed to fetch page content, using default content.", error);
     content = defaultContent;
   }
+
 
   return (
     <div className="flex flex-col min-h-screen">

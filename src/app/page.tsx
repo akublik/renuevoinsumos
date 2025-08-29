@@ -23,11 +23,16 @@ const defaultContent: HomePageContent = {
 
 export default async function Home() {
   const featuredProducts = products.slice(0, 4);
-  let content = await getPageContent<HomePageContent>('home');
+  let content: HomePageContent;
 
-  if (!content) {
+  try {
+    const pageContent = await getPageContent<HomePageContent>('home');
+    content = pageContent || defaultContent;
+  } catch (error) {
+    console.error("Failed to fetch page content, using default content.", error);
     content = defaultContent;
   }
+
 
   return (
     <div className="flex flex-col min-h-screen">
