@@ -5,11 +5,10 @@ import { products } from '@/lib/products';
 import ProductCard from '@/components/product-card';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { getPageContent } from '@/lib/page-content-service';
 import type { HomePageContent } from '@/lib/page-content-types';
 
-// Default content in case Firestore fetch fails or content is not set
-const defaultContent: HomePageContent = {
+// Default content is used as the primary source now to avoid Firestore dependency on public pages.
+const content: HomePageContent = {
   heroTitle: "Insumos Médicos de Calidad a tu Alcance",
   heroSubtitle: "Explora nuestro catálogo completo de insumos médicos para profesionales y público en general. Confianza y calidad en cada producto.",
   heroButtonText: "Ver Productos",
@@ -21,19 +20,9 @@ const defaultContent: HomePageContent = {
 };
 
 
-export default async function Home() {
+export default function Home() {
   const featuredProducts = products.slice(0, 4);
-  let content: HomePageContent;
-
-  try {
-    const pageContent = await getPageContent<HomePageContent>('home');
-    content = pageContent || defaultContent;
-  } catch (error) {
-    console.error("Failed to fetch page content, using default content.", error);
-    content = defaultContent;
-  }
-
-
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />

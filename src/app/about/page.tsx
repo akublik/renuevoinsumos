@@ -2,11 +2,10 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Image from 'next/image';
 import { Truck, ShieldCheck, Award } from 'lucide-react';
-import { getPageContent } from '@/lib/page-content-service';
 import type { AboutPageContent } from '@/lib/page-content-types';
 
 
-const defaultContent: AboutPageContent = {
+const content: AboutPageContent = {
   heroTitle: "Nuestra Misión es tu Bienestar",
   heroSubtitle: "Comprometidos con la salud, ofrecemos insumos médicos de la más alta calidad para profesionales y el público en general.",
   aboutTitle: "Sobre Insumos Online",
@@ -19,18 +18,7 @@ const defaultContent: AboutPageContent = {
   value3Desc: "Procesamos y enviamos tus pedidos con la mayor rapidez para que nunca te falte lo que necesitas."
 };
 
-export default async function AboutPage() {
-  let content: AboutPageContent;
-  
-  try {
-    const pageContent = await getPageContent<AboutPageContent>('about');
-    content = pageContent || defaultContent;
-  } catch (error) {
-    console.error("Failed to fetch page content, using default content.", error);
-    content = defaultContent;
-  }
-
-
+export default function AboutPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
