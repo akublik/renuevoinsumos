@@ -9,7 +9,6 @@ import { salesAssistant } from '@/ai/flows/sales-assistant';
 import { getProducts } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/auth-context';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -31,14 +30,13 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [liveProducts, setLiveProducts] = useState<ProductForAI[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth(); // Get auth state
 
   useEffect(() => {
     // Fetch products when the chatbot is first opened.
-    // The getProducts service now intelligently handles auth state.
     if (isOpen && liveProducts.length === 0) {
       const fetchProducts = async () => {
         try {
+          // getProducts now safely returns local data, preventing permission errors.
           const productsFromService = await getProducts();
           if (productsFromService && productsFromService.length > 0) {
             // Map to the AI-friendly format
@@ -64,7 +62,7 @@ export default function Chatbot() {
       };
       fetchProducts();
     }
-  }, [isOpen]); // Rerun effect only when isOpen changes
+  }, [isOpen, liveProducts.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

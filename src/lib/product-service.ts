@@ -46,42 +46,13 @@ export async function addProduct(
 }
 
 /**
- * Fetches products. If a user is authenticated, it fetches from Firestore.
- * Otherwise, it returns local mock data. This prevents permission errors for public users.
+ * Fetches products. This function now consistently returns local mock data
+ * for all public-facing parts of the application to prevent permission errors.
+ * Firestore fetching will be handled separately in authenticated admin components.
  */
 export async function getProducts(): Promise<Product[]> {
-  const currentUser = auth.currentUser;
-
-  if (currentUser) {
-    // Authenticated user (admin), fetch from Firestore
-    try {
-      const productsCollection = collection(db, 'products');
-      const productSnapshot = await getDocs(productsCollection);
-      if (productSnapshot.empty) {
-        console.log("No products found in Firestore, returning local data.");
-        // We cast to Product[] to satisfy the type, although createdAt will be missing.
-        return localProducts as Product[];
-      }
-      const productList = productSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          // Firestore timestamps need to be converted to Date objects
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
-        } as Product;
-      });
-      return productList;
-    } catch (error) {
-      console.error("Error getting products from Firestore for authenticated user: ", error);
-      // Fallback to local data in case of any error
-      return localProducts as Product[];
-    }
-  } else {
-    // Public user, return local data to avoid permission errors
-    console.log("User not authenticated, returning local product data.");
-    return localProducts as Product[];
-  }
+  // Always return local data for public users to avoid any permission issues.
+  return Promise.resolve(localProducts as Product[]);
 }
 
 
