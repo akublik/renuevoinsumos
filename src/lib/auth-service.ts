@@ -15,16 +15,19 @@ const handleAuthError = (error: any): string => {
         return 'El formato del correo electrónico es incorrecto.';
       case 'auth/user-not-found':
       case 'auth/wrong-password':
+      case 'auth/invalid-credential':
         return 'Correo electrónico o contraseña incorrectos.';
       case 'auth/email-already-in-use':
         return 'Este correo electrónico ya está registrado.';
       case 'auth/weak-password':
         return 'La contraseña debe tener al menos 6 caracteres.';
+      case 'auth/operation-not-allowed':
+        return 'La autenticación por correo y contraseña no está habilitada. Por favor, actívala en la Consola de Firebase.';
       default:
-        return 'Ocurrió un error. Por favor, intenta de nuevo.';
+        return `Ocurrió un error inesperado: ${error.code}`;
     }
   }
-  return 'Ocurrió un error desconocido.';
+  return 'Ocurrió un error desconocido. Por favor, intenta de nuevo.';
 };
 
 // Register a new user
