@@ -7,7 +7,7 @@ const pagesCollection = 'pages';
 /**
  * Fetches the content for a specific page from Firestore.
  * @param pageName - The name of the page document (e.g., 'home', 'about').
- * @returns The content object for the page, or null if it doesn't exist.
+ * @returns The content object for the page, or null if it doesn't exist or on error.
  */
 export async function getPageContent<T>(pageName: string): Promise<T | null> {
   try {
@@ -24,7 +24,8 @@ export async function getPageContent<T>(pageName: string): Promise<T | null> {
     }
   } catch (error) {
     console.error(`Error getting page content for ${pageName}:`, error);
-    throw new Error('Failed to fetch page content.');
+    // Return null to allow the UI to handle the "not found" or "error" state gracefully
+    return null;
   }
 }
 

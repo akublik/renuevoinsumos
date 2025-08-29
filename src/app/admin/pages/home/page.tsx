@@ -29,11 +29,12 @@ export default function EditHomePage() {
       setIsLoading(true);
       try {
         const pageContent = await getPageContent<HomePageContent>(PAGE_ID);
+        // If content is null (doesn't exist or error), initialize with empty form
         setContent(pageContent || initialContent);
       } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
-        setContent(initialContent);
+        setContent(initialContent); // Ensure form is usable even on error
       } finally {
         setIsLoading(false);
       }
@@ -115,7 +116,7 @@ export default function EditHomePage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" type="button" disabled={isSaving}>Cancelar</Button>
                 <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isSaving}>
                   {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
