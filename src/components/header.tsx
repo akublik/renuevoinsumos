@@ -2,21 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { HeartPulse, Search, User, ShoppingCart, Menu, X } from "lucide-react";
+import { HeartPulse, Search, User, ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/auth-context";
+import { logoutUser } from "@/lib/auth-service";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push('/');
+  };
 
   const navLinks = [
     { href: "/", label: "Inicio" },
     { href: "/products", label: "Productos" },
     { href: "/about", label: "Nosotros" },
     { href: "/contact", label: "Contacto" },
-    { href: "/admin/products", label: "Admin" },
+    ...(user ? [{ href: "/admin/products", label: "Admin" }] : []),
   ];
 
   return (
@@ -44,12 +53,20 @@ export default function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Buscar productos..." className="pl-10 w-48" />
           </div>
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/login">
-              <User className="h-5 w-5" />
-              <span className="sr-only">Iniciar Sesión</span>
-            </Link>
-          </Button>
+          {user ? (
+             <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar Sesión">
+              <LogOut className="h-5 w-5" />
+              <span className="sr-only">Cerrar Sesión</span>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" asChild title="Iniciar Sesión">
+              <Link href="/login">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Iniciar Sesión</span>
+              </Link>
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" asChild>
             <Link href="#">
               <ShoppingCart className="h-5 w-5" />
@@ -94,11 +111,17 @@ export default function Header() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input type="search" placeholder="Buscar..." className="pl-10" />
                   </div>
-                <Button asChild className="w-full">
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <User className="mr-2 h-4 w-4" /> Iniciar Sesión
-                  </Link>
-                </Button>
+                {user ? (
+                   <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full">
+                    <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+                  </Button>
+                ) : (
+                  <Button asChild className="w-full">
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="mr-2 h-4 w-4" /> Iniciar Sesión
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </SheetContent>
