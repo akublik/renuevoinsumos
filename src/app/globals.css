@@ -85,3 +85,10 @@
     @apply font-headline;
   }
 }
+
+@layer components {
+  .chatbot-height {
+    height: 60vh;
+    max-height: 500px;
+  }
+}
