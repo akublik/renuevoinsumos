@@ -1,16 +1,19 @@
 import { db, storage } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from './products';
 
 // Define a type for the data being added, excluding fields that will be generated.
-type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl'>;
+type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl' | 'createdAt'>;
 
 // Function to upload a file and return its URL
 const uploadFile = async (file: File, path: string): Promise<string> => {
     const fileRef = ref(storage, path);
+    console.log(`Uploading file to: ${path}`);
     const snapshot = await uploadBytes(fileRef, file);
-    return getDownloadURL(snapshot.ref);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    console.log(`File uploaded successfully. URL: ${downloadUrl}`);
+    return downloadUrl;
 };
 
 export const addProduct = async (
@@ -34,10 +37,11 @@ export const addProduct = async (
             imageUrl: imageUrl, // Main image URL
             images: [imageUrl], // For now, the main image is the only one in the array
             technicalSheetUrl: pdfUrl, // PDF URL, will be undefined if no file was uploaded
-            createdAt: serverTimestamp(),
+            createdAt: new Date(),
         };
 
         // 4. Add product document to Firestore
+        console.log("Saving product to Firestore:", productToSave);
         const docRef = await addDoc(collection(db, 'products'), productToSave);
 
         console.log('Product added with ID: ', docRef.id);

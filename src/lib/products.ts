@@ -11,10 +11,11 @@ export type Product = {
   imageUrl: string;
   images: string[];
   technicalSheetUrl?: string; // URL for the PDF
+  createdAt: Date;
 };
 
 // This is now just mock data, the real data will come from Firestore.
-export const products: Product[] = [
+export const products: Omit<Product, 'createdAt'>[] = [
   {
     id: '1',
     name: 'Guantes de Nitrilo',

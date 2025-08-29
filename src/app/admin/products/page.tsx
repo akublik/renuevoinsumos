@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileUp, Files, Download, Loader2 } from 'lucide-react';
+import { Upload, Files, Download, Loader2 } from 'lucide-react';
 import { addProduct } from '@/lib/product-service';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/products';
@@ -50,6 +50,7 @@ export default function AdminProductsPage() {
       return;
     }
     setIsSubmitting(true);
+    console.log('Submitting product...');
 
     try {
       const productData = {
@@ -62,6 +63,12 @@ export default function AdminProductsPage() {
         color: color || undefined,
         size: size || undefined,
       };
+      
+      console.log('Product data to save:', productData);
+      console.log('Image file:', imageFile.name);
+      if (pdfFile) {
+        console.log('PDF file:', pdfFile.name);
+      }
 
       await addProduct(productData, imageFile, pdfFile);
 
@@ -71,14 +78,15 @@ export default function AdminProductsPage() {
       });
       resetForm();
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error('Error in handleSubmit:', error);
       toast({
         title: 'Error al guardar',
-        description: 'Hubo un problema al intentar guardar el producto. Por favor, inténtalo de nuevo.',
+        description: 'Hubo un problema al intentar guardar el producto. Revisa la consola para más detalles.',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
+      console.log('Submission finished.');
     }
   };
 
