@@ -1,5 +1,6 @@
-import { db } from './firebase';
+import { db, storage } from './firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { HomePageContent, AboutPageContent } from './page-content-types';
 
 const pagesCollection = 'pages';
@@ -26,6 +27,34 @@ export async function getPageContent<T>(pageName: string): Promise<T | null> {
     console.error(`Error getting page content for ${pageName}:`, error);
     // Return null to allow the UI to handle the "not found" or "error" state gracefully
     return null;
+  }
+}
+
+const uploadFile = async (file: File, path: string): Promise<string> => {
+    const fileRef = ref(storage, path);
+    const snapshot = await uploadBytes(fileRef, file);
+    return getDownloadURL(snapshot.ref);
+};
+
+export async function updateHomePageContent(pageName: string, content: HomePageContent, bannerImage: File | null): Promise<void> {
+  try {
+    const contentToSave: Partial<HomePageContent> = { ...content };
+
+    if (bannerImage) {
+      const imageUrl = await uploadFile(bannerImage, `pages/${pageName}/banner_${Date.now()}_${bannerImage.name}`);
+      contentToSave.heroImageUrl = imageUrl;
+    }
+    
+    const docRef = doc(db, pagesCollection, pageName);
+    await setDoc(docRef, {
+      ...contentToSave,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    
+    console.log(`Page content for ${pageName} updated successfully.`);
+  } catch (error) {
+    console.error(`Error updating page content for ${pageName}:`, error);
+    throw new Error('Failed to update page content.');
   }
 }
 

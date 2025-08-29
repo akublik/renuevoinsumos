@@ -11,20 +11,30 @@ import { homePageContent } from '@/lib/page-content-data';
 // Content is now sourced from a local file to avoid Firestore dependency on public pages.
 const content: HomePageContent = homePageContent;
 
-
 export default function Home() {
   const featuredProducts = products.slice(0, 4);
-  
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="bg-primary/10 py-20 md:py-32">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline text-gray-800 mb-4 leading-tight">
+        <section className="relative bg-primary/10 py-20 md:py-32">
+          {content.heroImageUrl && (
+            <Image
+              src={content.heroImageUrl}
+              alt="Banner principal"
+              fill
+              className="object-cover w-full h-full"
+              data-ai-hint="medical physiotherapy"
+              priority
+            />
+          )}
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight">
               {content.heroTitle}
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
               {content.heroSubtitle}
             </p>
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
@@ -46,38 +56,38 @@ export default function Home() {
 
         <section className="bg-gray-50 py-16 md:py-24">
           <div className="container mx-auto px-4">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                  <div>
-                      <h2 className="text-3xl md:text-4xl font-bold mb-4">{content.whyTitle}</h2>
-                      <p className="text-gray-600 mb-6">
-                          {content.whyDescription}
-                      </p>
-                      <ul className="space-y-4">
-                          <li className="flex items-start">
-                              <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
-                              <span><strong>{content.whyPoint1.split(':')[0]}:</strong> {content.whyPoint1.split(':')[1]}</span>
-                          </li>
-                          <li className="flex items-start">
-                              <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
-                              <span><strong>{content.whyPoint2.split(':')[0]}:</strong> {content.whyPoint2.split(':')[1]}</span>
-                          </li>
-                          <li className="flex items-start">
-                              <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
-                              <span><strong>{content.whyPoint3.split(':')[0]}:</strong> {content.whyPoint3.split(':')[1]}</span>
-                          </li>
-                      </ul>
-                  </div>
-                  <div className="rounded-lg overflow-hidden shadow-xl">
-                      <Image
-                          src="https://picsum.photos/600/400"
-                          alt="Personal médico con insumos"
-                          width={600}
-                          height={400}
-                          className="w-full h-auto object-cover"
-                          data-ai-hint="medical staff"
-                      />
-                  </div>
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">{content.whyTitle}</h2>
+                <p className="text-gray-600 mb-6">
+                  {content.whyDescription}
+                </p>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
+                    <span><strong>{content.whyPoint1.split(':')[0]}:</strong> {content.whyPoint1.split(':')[1]}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
+                    <span><strong>{content.whyPoint2.split(':')[0]}:</strong> {content.whyPoint2.split(':')[1]}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckIcon className="h-6 w-6 text-accent mr-3 mt-1 shrink-0" />
+                    <span><strong>{content.whyPoint3.split(':')[0]}:</strong> {content.whyPoint3.split(':')[1]}</span>
+                  </li>
+                </ul>
               </div>
+              <div className="rounded-lg overflow-hidden shadow-xl">
+                <Image
+                  src="https://picsum.photos/600/400"
+                  alt="Personal médico con insumos"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-cover"
+                  data-ai-hint="medical staff"
+                />
+              </div>
+            </div>
           </div>
         </section>
       </main>

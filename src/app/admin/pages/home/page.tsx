@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getPageContent, updatePageContent } from "@/lib/page-content-service";
+import { getPageContent, updateHomePageContent } from "@/lib/page-content-service";
 import type { HomePageContent } from "@/lib/page-content-types";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -14,12 +15,13 @@ import { Loader2 } from "lucide-react";
 const PAGE_ID = 'home';
 
 const initialContent: HomePageContent = {
-  heroTitle: "", heroSubtitle: "", heroButtonText: "",
+  heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrl: "",
   whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
 };
 
 export default function EditHomePage() {
   const [content, setContent] = useState<HomePageContent | null>(null);
+  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -29,12 +31,11 @@ export default function EditHomePage() {
       setIsLoading(true);
       try {
         const pageContent = await getPageContent<HomePageContent>(PAGE_ID);
-        // If content is null (doesn't exist or error), initialize with empty form
         setContent(pageContent || initialContent);
       } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
-        setContent(initialContent); // Ensure form is usable even on error
+        setContent(initialContent);
       } finally {
         setIsLoading(false);
       }
@@ -46,14 +47,26 @@ export default function EditHomePage() {
     const { id, value } = e.target;
     setContent(prev => prev ? { ...prev, [id]: value } : null);
   };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setBannerImageFile(e.target.files[0]);
+    } else {
+      setBannerImageFile(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content) return;
     setIsSaving(true);
     try {
-      await updatePageContent(PAGE_ID, content);
+      await updateHomePageContent(PAGE_ID, content, bannerImageFile);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
+       if (bannerImageFile) {
+        // Refresh the page to show the new image if one was uploaded
+         window.location.reload();
+      }
     } catch (error) {
       console.error("Failed to save page content", error);
       toast({ title: "Error", description: "No se pudo guardar el contenido.", variant: "destructive" });
@@ -92,6 +105,17 @@ export default function EditHomePage() {
                 <div className="grid gap-2">
                   <Label htmlFor="heroButtonText">Texto del Botón</Label>
                   <Input id="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="heroBanner">Imagen de Banner</Label>
+                  <Input id="heroBanner" type="file" accept="image/*" onChange={handleFileChange} className="cursor-pointer" />
+                   {content.heroImageUrl && !bannerImageFile && (
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground mb-2">Imagen actual:</p>
+                      <Image src={content.heroImageUrl} alt="Banner actual" width={200} height={100} className="rounded-md object-cover" />
+                    </div>
+                  )}
+                  {bannerImageFile && <p className="text-sm text-muted-foreground">Nueva imagen seleccionada: {bannerImageFile.name}</p>}
                 </div>
               </div>
 

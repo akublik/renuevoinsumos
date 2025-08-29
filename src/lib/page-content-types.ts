@@ -3,6 +3,7 @@ export type HomePageContent = {
   heroTitle: string;
   heroSubtitle: string;
   heroButtonText: string;
+  heroImageUrl?: string; // Optional URL for the hero banner image
   whyTitle: string;
   whyDescription: string;
   whyPoint1: string;
