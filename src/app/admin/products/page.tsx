@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload } from "lucide-react";
+import { Upload, FileUp } from "lucide-react";
 
 export default function AdminProductsPage() {
   return (
@@ -72,6 +72,14 @@ export default function AdminProductsPage() {
                             <Upload className="h-12 w-12 text-gray-400 mb-4" />
                             <p className="text-sm text-muted-foreground mb-2">Arrastra y suelta las imágenes aquí, o</p>
                             <Button type="button" variant="outline">Seleccionar Archivos</Button>
+                         </div>
+                    </div>
+                    <div className="grid gap-2">
+                         <Label>Ficha Técnica (PDF)</Label>
+                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center">
+                            <FileUp className="h-12 w-12 text-gray-400 mb-4" />
+                            <p className="text-sm text-muted-foreground mb-2">Arrastra y suelta el PDF aquí, o</p>
+                            <Button type="button" variant="outline">Seleccionar Archivo</Button>
                          </div>
                     </div>
                     <div className="flex justify-end gap-2">
