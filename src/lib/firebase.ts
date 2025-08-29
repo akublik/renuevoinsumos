@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -25,5 +25,16 @@ if (!getApps().length) {
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+
+// Connect to Firestore emulator in development
+if (process.env.NODE_ENV === 'development') {
+    try {
+        connectFirestoreEmulator(db, '127.0.0.1', 8080);
+        console.log("Connected to local Firestore emulator.");
+    } catch (e) {
+        console.error("Error connecting to Firestore emulator. Make sure it's running.", e);
+    }
+}
+
 
 export { db, auth, storage };
