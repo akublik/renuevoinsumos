@@ -53,7 +53,7 @@ export default function EditHomePage() {
     try {
       await updatePageContent(PAGE_ID, content);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
-    } catch (error)
+    } catch (error) {
       console.error("Failed to save page content", error);
       toast({ title: "Error", description: "No se pudo guardar el contenido.", variant: "destructive" });
     } finally {
