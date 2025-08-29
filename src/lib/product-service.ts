@@ -1,7 +1,8 @@
 import { db, storage } from './firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from './products';
+import Papa from 'papaparse';
 
 // Define a type for the data being added, excluding fields that will be generated.
 type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl' | 'createdAt'>;
@@ -47,4 +48,81 @@ export const addProduct = async (
         console.error("Error adding product: ", error);
         throw new Error('Failed to add product to the database.');
     }
+};
+
+const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
+
+type CsvRow = {
+    PRODUCTO: string;
+    MARCA: string;
+    DESCRIPCION: string;
+    CATEGORIA: string;
+    PRECIO: string;
+    STOCK: string;
+    COLOR?: string;
+    TALLA?: string;
+    IMAGEN: string;
+};
+
+export const addProductsFromCSV = (file: File): Promise<{ successCount: number; errorCount: number; }> => {
+    return new Promise((resolve, reject) => {
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                const rows = results.data as CsvRow[];
+                let successCount = 0;
+                let errorCount = 0;
+
+                const batch = writeBatch(db);
+
+                for (const row of rows) {
+                    try {
+                        const price = parseFloat(row.PRECIO);
+                        const stock = parseInt(row.STOCK, 10);
+                        const category = row.CATEGORIA as Product['category'];
+
+                        if (!row.PRODUCTO || !row.IMAGEN || isNaN(price) || isNaN(stock) || !validCategories.includes(category)) {
+                           console.error('Invalid row data:', row);
+                           errorCount++;
+                           continue;
+                        }
+
+                        const newProduct: Omit<Product, 'id' | 'createdAt'> = {
+                            name: row.PRODUCTO,
+                            brand: row.MARCA,
+                            description: row.DESCRIPCION,
+                            category: category,
+                            price: price,
+                            stock: stock,
+                            imageUrl: row.IMAGEN,
+                            images: [row.IMAGEN],
+                            color: row.COLOR || undefined,
+                            size: row.TALLA || undefined,
+                        };
+                        
+                        const docRef = collection(db, "products").doc();
+                        batch.set(docRef, newProduct);
+                        successCount++;
+
+                    } catch(e) {
+                        console.error('Error processing row:', row, e);
+                        errorCount++;
+                    }
+                }
+                
+                try {
+                    await batch.commit();
+                    resolve({ successCount, errorCount });
+                } catch (e) {
+                     console.error("Error committing batch:", e);
+                     reject(e);
+                }
+            },
+            error: (error) => {
+                console.error("Error parsing CSV:", error);
+                reject(error);
+            }
+        });
+    });
 };

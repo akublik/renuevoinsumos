@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Files, Download, Loader2 } from 'lucide-react';
-import { addProduct } from '@/lib/product-service';
+import { addProduct, addProductsFromCSV } from '@/lib/product-service';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/products';
 
@@ -23,6 +23,10 @@ export default function AdminProductsPage() {
   const [size, setSize] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [isUploadingCsv, setIsUploadingCsv] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -88,6 +92,51 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleCsvImport = async () => {
+    if (!csvFile) {
+      toast({
+        title: 'No se seleccionó archivo',
+        description: 'Por favor, selecciona un archivo CSV para importar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsUploadingCsv(true);
+    try {
+      const result = await addProductsFromCSV(csvFile);
+      toast({
+        title: 'Importación CSV completada',
+        description: `${result.successCount} productos importados. ${result.errorCount} errores.`,
+      });
+    } catch (error) {
+      console.error("Error importing CSV:", error);
+      toast({
+        title: 'Error en la importación',
+        description: 'Hubo un problema al procesar el archivo CSV. Revisa la consola.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingCsv(false);
+      setCsvFile(null);
+    }
+  };
+  
+  const downloadCsvTemplate = () => {
+    const header = "PRODUCTO,MARCA,DESCRIPCION,CATEGORIA,PRECIO,STOCK,COLOR,TALLA,IMAGEN\n";
+    const example = "Guantes de Nitrilo,MedSafe,Caja de 100 guantes,Consumibles,15.99,250,Azul,M,https://example.com/image.jpg\n";
+    const blob = new Blob([header + example], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "plantilla_productos.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <Card>
@@ -99,17 +148,22 @@ export default function AdminProductsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center">
-              <Files className="h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-sm text-muted-foreground mb-2">Arrastra y suelta el archivo CSV aquí, o</p>
-              <Button type="button" variant="outline">Seleccionar Archivo</Button>
+            <div className="grid gap-2">
+              <Label>Archivo CSV</Label>
+              <Input 
+                type="file" 
+                accept=".csv" 
+                onChange={(e) => handleFileChange(e, setCsvFile)} 
+                className="cursor-pointer"
+              />
+              {csvFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {csvFile.name}</p>}
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <Button type="submit" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                <Upload className="mr-2 h-4 w-4" />
+              <Button onClick={handleCsvImport} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" disabled={isUploadingCsv || !csvFile}>
+                {isUploadingCsv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 Importar Productos
               </Button>
-              <Button type="button" variant="link" className="w-full sm:w-auto">
+              <Button onClick={downloadCsvTemplate} type="button" variant="link" className="w-full sm:w-auto">
                 <Download className="mr-2 h-4 w-4" />
                 Descargar plantilla CSV
               </Button>
