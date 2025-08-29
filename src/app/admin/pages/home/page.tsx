@@ -10,18 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { getPageContent, updateHomePageContent } from "@/lib/page-content-service";
 import type { HomePageContent } from "@/lib/page-content-types";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 const PAGE_ID = 'home';
 
 const initialContent: HomePageContent = {
-  heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrl: "",
+  heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrls: [],
   whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
 };
 
 export default function EditHomePage() {
   const [content, setContent] = useState<HomePageContent | null>(null);
-  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+  const [bannerImageFiles, setBannerImageFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -49,10 +49,10 @@ export default function EditHomePage() {
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setBannerImageFile(e.target.files[0]);
+    if (e.target.files) {
+      setBannerImageFiles(Array.from(e.target.files));
     } else {
-      setBannerImageFile(null);
+      setBannerImageFiles([]);
     }
   };
 
@@ -61,9 +61,9 @@ export default function EditHomePage() {
     if (!content) return;
     setIsSaving(true);
     try {
-      await updateHomePageContent(PAGE_ID, content, bannerImageFile);
+      await updateHomePageContent(PAGE_ID, content, bannerImageFiles);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
-       if (bannerImageFile) {
+       if (bannerImageFiles.length > 0) {
         // Refresh the page to show the new image if one was uploaded
          window.location.reload();
       }
@@ -74,6 +74,17 @@ export default function EditHomePage() {
       setIsSaving(false);
     }
   };
+
+  const handleRemoveImage = (urlToRemove: string) => {
+    setContent(prev => {
+        if (!prev) return null;
+        return {
+            ...prev,
+            heroImageUrls: prev.heroImageUrls.filter(url => url !== urlToRemove)
+        }
+    })
+  }
+
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -107,15 +118,37 @@ export default function EditHomePage() {
                   <Input id="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="heroBanner">Imagen de Banner</Label>
-                  <Input id="heroBanner" type="file" accept="image/*" onChange={handleFileChange} className="cursor-pointer" />
-                   {content.heroImageUrl && !bannerImageFile && (
-                    <div className="mt-2">
-                      <p className="text-sm text-muted-foreground mb-2">Imagen actual:</p>
-                      <Image src={content.heroImageUrl} alt="Banner actual" width={200} height={100} className="rounded-md object-cover" />
+                  <Label htmlFor="heroBanner">Imágenes de Banner</Label>
+                  <Input id="heroBanner" type="file" accept="image/*" onChange={handleFileChange} className="cursor-pointer" multiple />
+                   {content.heroImageUrls && content.heroImageUrls.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground mb-2">Imágenes actuales (haz clic en la 'x' para eliminar una imagen y luego guarda los cambios):</p>
+                      <div className="flex flex-wrap gap-4">
+                        {content.heroImageUrls.map((url) => (
+                          <div key={url} className="relative group">
+                            <Image src={url} alt="Banner actual" width={150} height={100} className="rounded-md object-cover" />
+                             <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleRemoveImage(url)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  {bannerImageFile && <p className="text-sm text-muted-foreground">Nueva imagen seleccionada: {bannerImageFile.name}</p>}
+                  {bannerImageFiles.length > 0 && (
+                     <p className="text-sm text-muted-foreground mt-2">
+                        Nuevas imágenes seleccionadas: {bannerImageFiles.map(f => f.name).join(', ')}
+                     </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Puedes seleccionar varias imágenes. Se mostrarán en un carrusel.
+                  </p>
                 </div>
               </div>
 

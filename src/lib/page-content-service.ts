@@ -36,13 +36,19 @@ const uploadFile = async (file: File, path: string): Promise<string> => {
     return getDownloadURL(snapshot.ref);
 };
 
-export async function updateHomePageContent(pageName: string, content: HomePageContent, bannerImage: File | null): Promise<void> {
+export async function updateHomePageContent(pageName: string, content: HomePageContent, bannerImages: File[]): Promise<void> {
   try {
-    const contentToSave: Partial<HomePageContent> = { ...content };
+    const contentToSave: Partial<HomePageContent> & { heroImageUrls: string[] } = {
+        ...content,
+        heroImageUrls: content.heroImageUrls || []
+    };
 
-    if (bannerImage) {
-      const imageUrl = await uploadFile(bannerImage, `pages/${pageName}/banner_${Date.now()}_${bannerImage.name}`);
-      contentToSave.heroImageUrl = imageUrl;
+    if (bannerImages.length > 0) {
+      const uploadPromises = bannerImages.map(file => 
+        uploadFile(file, `pages/${pageName}/banner_${Date.now()}_${file.name}`)
+      );
+      const newImageUrls = await Promise.all(uploadPromises);
+      contentToSave.heroImageUrls.push(...newImageUrls);
     }
     
     const docRef = doc(db, pagesCollection, pageName);

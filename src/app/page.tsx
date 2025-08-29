@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -7,6 +9,16 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import type { HomePageContent } from '@/lib/page-content-types';
 import { homePageContent } from '@/lib/page-content-data';
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
+
 
 // Content is now sourced from a local file to avoid Firestore dependency on public pages.
 const content: HomePageContent = homePageContent;
@@ -18,16 +30,39 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="relative bg-primary/10 py-20 md:py-32">
-          {content.heroImageUrl && (
-            <Image
-              src={content.heroImageUrl}
-              alt="Banner principal"
-              fill
-              className="object-cover w-full h-full"
-              data-ai-hint="medical physiotherapy"
-              priority
-            />
+        <section className="relative bg-primary/10 h-[60vh] md:h-[70vh] flex items-center justify-center">
+         {content.heroImageUrls && content.heroImageUrls.length > 0 ? (
+            <Carousel
+              className="w-full h-full"
+              plugins={[
+                Autoplay({
+                  delay: 5000,
+                  stopOnInteraction: true,
+                }),
+              ]}
+              opts={{
+                loop: true,
+              }}
+            >
+              <CarouselContent className="w-full h-full">
+                {content.heroImageUrls.map((url, index) => (
+                  <CarouselItem key={index} className="w-full h-full">
+                     <Image
+                      src={url}
+                      alt={`Banner principal ${index + 1}`}
+                      fill
+                      className="object-cover w-full h-full"
+                      priority={index === 0}
+                      data-ai-hint="medical physiotherapy"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
+              <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
+            </Carousel>
+          ) : (
+             <div className="w-full h-full bg-gray-200" />
           )}
           <div className="absolute inset-0 bg-black/50" />
           <div className="container mx-auto px-4 text-center relative z-10">
@@ -103,7 +138,7 @@ function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
-      viewBox="0 0 24 24"
+      viewBox="0 0 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
