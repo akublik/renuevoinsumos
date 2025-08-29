@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { Product } from '@/lib/products';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -50,7 +49,7 @@ const prompt = ai.definePrompt({
   output: { schema: SalesAssistantOutputSchema },
   prompt: `You are a friendly and helpful sales assistant for a medical supply store called "Insumos Online".
 Your goal is to answer user questions about the products, check stock, prices, and provide descriptions.
-Be concise, polite, and professional.
+Be concise, polite, and professional. If a product is out of stock (stock is 0), inform the user.
 
 Here is the list of available products:
 {{#each products}}

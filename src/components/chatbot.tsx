@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Send, X, Bot } from 'lucide-react';
 import { salesAssistant } from '@/ai/flows/sales-assistant';
-import { products } from '@/lib/products';
+import { getProducts } from '@/lib/product-service';
+import type { Product } from '@/lib/products';
 import { cn } from '@/lib/utils';
 
 type Message = {
@@ -24,7 +25,28 @@ export default function Chatbot() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [liveProducts, setLiveProducts] = useState<Product[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Fetch live products when the chatbot is first opened.
+    if (isOpen && liveProducts.length === 0) {
+      const fetchProducts = async () => {
+        try {
+          const productsFromDb = await getProducts();
+          setLiveProducts(productsFromDb);
+        } catch (error) {
+          console.error("Failed to fetch products for chatbot:", error);
+           const errorMessage: Message = {
+            role: 'assistant',
+            content: 'Lo siento, no pude cargar la lista de productos en este momento.',
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        }
+      };
+      fetchProducts();
+    }
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,10 +64,13 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
+       if (liveProducts.length === 0) {
+        throw new Error("Product list not available.");
+      }
       const chatHistory = [...messages, userMessage];
       const { response } = await salesAssistant({
         history: chatHistory,
-        products: products.map(({ images, imageUrl, ...rest }) => rest), // Omit image fields
+        products: liveProducts.map(({ images, imageUrl, technicalSheetUrl, createdAt, ...rest }) => rest),
       });
       const botMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, botMessage]);
