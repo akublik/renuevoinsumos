@@ -61,7 +61,13 @@ const salesAssistantFlow = ai.defineFlow(
     outputSchema: SalesAssistantOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Genkit's `model` role is equivalent to our app's `bot` sender type
+    const history = input.history.map(m => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    const { output } = await prompt({ history });
     return output!;
   }
 );
