@@ -10,8 +10,10 @@ export type Product = {
   stock: number;
   imageUrl: string;
   images: string[];
+  technicalSheetUrl?: string; // URL for the PDF
 };
 
+// This is now just mock data, the real data will come from Firestore.
 export const products: Product[] = [
   {
     id: '1',
