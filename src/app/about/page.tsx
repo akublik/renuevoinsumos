@@ -2,8 +2,29 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Image from 'next/image';
 import { Truck, ShieldCheck, Award } from 'lucide-react';
+import { getPageContent } from '@/lib/page-content-service';
+import type { AboutPageContent } from '@/lib/page-content-types';
 
-export default function AboutPage() {
+
+const defaultContent: AboutPageContent = {
+  heroTitle: "Nuestra Misión es tu Bienestar",
+  heroSubtitle: "Comprometidos con la salud, ofrecemos insumos médicos de la más alta calidad para profesionales y el público en general.",
+  aboutTitle: "Sobre Insumos Online",
+  aboutDescription: "Desde nuestra fundación, nos hemos dedicado a ser el puente entre la innovación médica y quienes la necesitan. Seleccionamos cuidadosamente cada producto, asegurando que cumpla con los estándares más rigurosos de calidad y seguridad. Nuestro equipo de expertos está siempre disponible para brindar asesoramiento y garantizar que encuentres exactamente lo que buscas. Creemos en un servicio al cliente excepcional, precios justos y una logística eficiente para que recibas tus insumos a tiempo, siempre.",
+  value1Title: "Calidad Superior",
+  value1Desc: "Solo ofrecemos productos que cumplen con las más altas certificaciones de calidad y seguridad.",
+  value2Title: "Confianza y Seguridad",
+  value2Desc: "Tu salud es nuestra prioridad. Garantizamos la procedencia y efectividad de cada insumo.",
+  value3Title: "Servicio Eficiente",
+  value3Desc: "Procesamos y enviamos tus pedidos con la mayor rapidez para que nunca te falte lo que necesitas."
+};
+
+export default async function AboutPage() {
+  let content = await getPageContent<AboutPageContent>('about');
+  if (!content) {
+    content = defaultContent;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -11,10 +32,10 @@ export default function AboutPage() {
         <section className="bg-primary/10 py-20 md:py-32">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline text-gray-800 mb-4">
-              Nuestra Misión es tu Bienestar
+              {content.heroTitle}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprometidos con la salud, ofrecemos insumos médicos de la más alta calidad para profesionales y el público en general.
+              {content.heroSubtitle}
             </p>
           </div>
         </section>
@@ -33,13 +54,8 @@ export default function AboutPage() {
                 />
               </div>
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Sobre Insumos Online</h2>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Desde nuestra fundación, nos hemos dedicado a ser el puente entre la innovación médica y quienes la necesitan. Seleccionamos cuidadosamente cada producto, asegurando que cumpla con los estándares más rigurosos de calidad y seguridad. Nuestro equipo de expertos está siempre disponible para brindar asesoramiento y garantizar que encuentres exactamente lo que buscas.
-                </p>
-                <p className="text-gray-600 leading-relaxed">
-                  Creemos en un servicio al cliente excepcional, precios justos y una logística eficiente para que recibas tus insumos a tiempo, siempre.
-                </p>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">{content.aboutTitle}</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: content.aboutDescription.replace(/\n/g, '<br />') }} />
               </div>
             </div>
           </div>
@@ -51,18 +67,18 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                     <div className="flex flex-col items-center">
                         <Award className="h-12 w-12 text-accent mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Calidad Superior</h3>
-                        <p className="text-muted-foreground">Solo ofrecemos productos que cumplen con las más altas certificaciones de calidad y seguridad.</p>
+                        <h3 className="text-xl font-bold mb-2">{content.value1Title}</h3>
+                        <p className="text-muted-foreground">{content.value1Desc}</p>
                     </div>
                     <div className="flex flex-col items-center">
                         <ShieldCheck className="h-12 w-12 text-accent mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Confianza y Seguridad</h3>
-                        <p className="text-muted-foreground">Tu salud es nuestra prioridad. Garantizamos la procedencia y efectividad de cada insumo.</p>
+                        <h3 className="text-xl font-bold mb-2">{content.value2Title}</h3>
+                        <p className="text-muted-foreground">{content.value2Desc}</p>
                     </div>
                     <div className="flex flex-col items-center">
                         <Truck className="h-12 w-12 text-accent mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Servicio Eficiente</h3>
-                        <p className="text-muted-foreground">Procesamos y enviamos tus pedidos con la mayor rapidez para que nunca te falte lo que necesitas.</p>
+                        <h3 className="text-xl font-bold mb-2">{content.value3Title}</h3>
+                        <p className="text-muted-foreground">{content.value3Desc}</p>
                     </div>
                 </div>
             </div>

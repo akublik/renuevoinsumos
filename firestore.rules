@@ -1,0 +1,16 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to products and pages, essential for the site to display them.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false; // Explicitly deny write access to the public.
+    }
+
+    match /pages/{pageId} {
+      allow read: if true;
+      allow write: if false; // Explicitly deny write access to the public.
+    }
+  }
+}
