@@ -4,9 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from './products';
 
 // Define a type for the data being added, excluding fields that will be generated.
-type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl'> & {
-    technicalSheetUrl?: string;
-};
+type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl'>;
 
 // Function to upload a file and return its URL
 const uploadFile = async (file: File, path: string): Promise<string> => {
