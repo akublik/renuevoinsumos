@@ -13,6 +13,11 @@ import { Loader2 } from "lucide-react";
 
 const PAGE_ID = 'home';
 
+const initialContent: HomePageContent = {
+  heroTitle: "", heroSubtitle: "", heroButtonText: "",
+  whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
+};
+
 export default function EditHomePage() {
   const [content, setContent] = useState<HomePageContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,18 +29,11 @@ export default function EditHomePage() {
       setIsLoading(true);
       try {
         const pageContent = await getPageContent<HomePageContent>(PAGE_ID);
-        if (pageContent) {
-          setContent(pageContent);
-        } else {
-          // Initialize with empty strings if no content exists
-          setContent({
-            heroTitle: "", heroSubtitle: "", heroButtonText: "",
-            whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
-          });
-        }
+        setContent(pageContent || initialContent);
       } catch (error) {
         console.error("Failed to load page content", error);
-        toast({ title: "Error", description: "No se pudo cargar el contenido.", variant: "destructive" });
+        toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
+        setContent(initialContent);
       } finally {
         setIsLoading(false);
       }
@@ -55,7 +53,7 @@ export default function EditHomePage() {
     try {
       await updatePageContent(PAGE_ID, content);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
-    } catch (error) {
+    } catch (error)
       console.error("Failed to save page content", error);
       toast({ title: "Error", description: "No se pudo guardar el contenido.", variant: "destructive" });
     } finally {

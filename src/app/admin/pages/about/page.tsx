@@ -13,6 +13,11 @@ import { Loader2 } from 'lucide-react';
 
 const PAGE_ID = 'about';
 
+const initialContent: AboutPageContent = {
+  heroTitle: "", heroSubtitle: "", aboutTitle: "", aboutDescription: "",
+  value1Title: "", value1Desc: "", value2Title: "", value2Desc: "", value3Title: "", value3Desc: ""
+};
+
 export default function EditAboutPage() {
   const [content, setContent] = useState<AboutPageContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,18 +29,11 @@ export default function EditAboutPage() {
       setIsLoading(true);
       try {
         const pageContent = await getPageContent<AboutPageContent>(PAGE_ID);
-        if (pageContent) {
-          setContent(pageContent);
-        } else {
-          // Initialize with empty strings if no content exists
-          setContent({
-            heroTitle: "", heroSubtitle: "", aboutTitle: "", aboutDescription: "",
-            value1Title: "", value1Desc: "", value2Title: "", value2Desc: "", value3Title: "", value3Desc: ""
-          });
-        }
+        setContent(pageContent || initialContent);
       } catch (error) {
         console.error("Failed to load page content", error);
-        toast({ title: "Error", description: "No se pudo cargar el contenido.", variant: "destructive" });
+        toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
+        setContent(initialContent);
       } finally {
         setIsLoading(false);
       }
