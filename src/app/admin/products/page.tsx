@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, FileUp, FileCsv, Download } from "lucide-react";
+import { Upload, FileUp, Files, Download } from "lucide-react";
 
 export default function AdminProductsPage() {
   return (
@@ -19,7 +19,7 @@ export default function AdminProductsPage() {
             <CardContent>
                 <div className="grid gap-4">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center">
-                        <FileCsv className="h-12 w-12 text-gray-400 mb-4" />
+                        <Files className="h-12 w-12 text-gray-400 mb-4" />
                         <p className="text-sm text-muted-foreground mb-2">Arrastra y suelta el archivo CSV aquí, o</p>
                         <Button type="button" variant="outline">Seleccionar Archivo</Button>
                     </div>
