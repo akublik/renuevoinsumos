@@ -4,11 +4,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, FileUp } from "lucide-react";
+import { Upload, FileUp, FileCsv, Download } from "lucide-react";
 
 export default function AdminProductsPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline">Carga Masiva con CSV</CardTitle>
+                <CardDescription>
+                    Sube un archivo CSV para agregar múltiples productos al catálogo de una sola vez.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center">
+                        <FileCsv className="h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-sm text-muted-foreground mb-2">Arrastra y suelta el archivo CSV aquí, o</p>
+                        <Button type="button" variant="outline">Seleccionar Archivo</Button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <Button type="submit" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Importar Productos
+                        </Button>
+                         <Button type="button" variant="link" className="w-full sm:w-auto">
+                            <Download className="mr-2 h-4 w-4" />
+                            Descargar plantilla CSV
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle className="text-2xl font-headline">Agregar Nuevo Producto</CardTitle>
