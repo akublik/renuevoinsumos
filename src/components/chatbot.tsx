@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Send, X, Bot } from 'lucide-react';
 import { salesAssistant } from '@/ai/flows/sales-assistant';
 import { getProducts } from '@/lib/product-service';
-import { products as localProducts, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
 
@@ -34,39 +34,37 @@ export default function Chatbot() {
   const { user } = useAuth(); // Get auth state
 
   useEffect(() => {
-    // Map local products to the AI-friendly format
-    const productsForAI = localProducts.map(({ images, imageUrl, technicalSheetUrl, createdAt, ...rest }) => rest);
-
-    // If the user is not authenticated, use local product data to avoid permission errors.
-    if (!user) {
-      setLiveProducts(productsForAI);
-      return;
-    }
-
-    // If the user is authenticated, fetch live products when the chatbot is first opened.
+    // Fetch products when the chatbot is first opened.
+    // The getProducts service now intelligently handles auth state.
     if (isOpen && liveProducts.length === 0) {
       const fetchProducts = async () => {
         try {
-          const productsFromDb = await getProducts();
-          if (productsFromDb && productsFromDb.length > 0) {
-            setLiveProducts(productsFromDb.map(({ images, imageUrl, technicalSheetUrl, createdAt, ...rest }) => rest));
-          } else {
-            // Fallback to local products if fetching fails or returns empty
+          const productsFromService = await getProducts();
+          if (productsFromService && productsFromService.length > 0) {
+            // Map to the AI-friendly format
+            const productsForAI = productsFromService.map(
+              ({ images, imageUrl, technicalSheetUrl, createdAt, ...rest }) => rest
+            );
             setLiveProducts(productsForAI);
+          } else {
+             const errorMessage: Message = {
+                role: 'assistant',
+                content: 'No pude encontrar productos en el catálogo en este momento.',
+             };
+             setMessages((prev) => [...prev, errorMessage]);
           }
         } catch (error) {
-          console.error("Failed to fetch products for chatbot, falling back to local data:", error);
-          setLiveProducts(productsForAI);
+          console.error("Failed to fetch products for chatbot:", error);
           const errorMessage: Message = {
             role: 'assistant',
-            content: 'Lo siento, no pude cargar la lista actualizada de productos. Usaré la información que tengo disponible.',
+            content: 'Lo siento, no pude cargar la lista de productos. Por favor, intenta de nuevo más tarde.',
           };
           setMessages((prev) => [...prev, errorMessage]);
         }
       };
       fetchProducts();
     }
-  }, [isOpen, user]); // Rerun effect if user or isOpen changes
+  }, [isOpen]); // Rerun effect only when isOpen changes
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -85,7 +83,10 @@ export default function Chatbot() {
 
     try {
       if (liveProducts.length === 0) {
-        throw new Error("La lista de productos no está disponible.");
+         const botMessage: Message = { role: 'assistant', content: "Lo siento, no tengo información sobre los productos en este momento para poder ayudarte." };
+         setMessages((prev) => [...prev, botMessage]);
+         setIsLoading(false);
+         return;
       }
       const chatHistory = [...messages, userMessage];
       const { response } = await salesAssistant({
