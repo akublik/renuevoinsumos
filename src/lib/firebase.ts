@@ -26,15 +26,15 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Connect to Firestore emulator in development
-if (process.env.NODE_ENV === 'development') {
+// Connect to Firestore emulator in development if the host is set
+if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST) {
     try {
-        connectFirestoreEmulator(db, '127.0.0.1', 8080);
-        console.log("Connected to local Firestore emulator.");
+        const [host, port] = process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST.split(':');
+        connectFirestoreEmulator(db, host, parseInt(port));
+        console.log(`Connected to local Firestore emulator at ${host}:${port}`);
     } catch (e) {
-        console.error("Error connecting to Firestore emulator. Make sure it's running.", e);
+        console.error("Error connecting to Firestore emulator. Make sure it's running and the host is set correctly.", e);
     }
 }
-
 
 export { db, auth, storage };
