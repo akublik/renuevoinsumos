@@ -9,10 +9,8 @@ type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalShe
 // Function to upload a file and return its URL
 const uploadFile = async (file: File, path: string): Promise<string> => {
     const fileRef = ref(storage, path);
-    console.log(`Uploading file to: ${path}`);
     const snapshot = await uploadBytes(fileRef, file);
     const downloadUrl = await getDownloadURL(snapshot.ref);
-    console.log(`File uploaded successfully. URL: ${downloadUrl}`);
     return downloadUrl;
 };
 
@@ -37,11 +35,9 @@ export const addProduct = async (
             imageUrl: imageUrl, // Main image URL
             images: [imageUrl], // For now, the main image is the only one in the array
             technicalSheetUrl: pdfUrl, // PDF URL, will be undefined if no file was uploaded
-            createdAt: new Date(),
         };
 
         // 4. Add product document to Firestore
-        console.log("Saving product to Firestore:", productToSave);
         const docRef = await addDoc(collection(db, 'products'), productToSave);
 
         console.log('Product added with ID: ', docRef.id);

@@ -50,26 +50,19 @@ export default function AdminProductsPage() {
       return;
     }
     setIsSubmitting(true);
-    console.log('Submitting product...');
 
     try {
       const productData = {
         name,
         brand,
         description,
-        category, // Corrected: Pass the category string directly
+        category,
         price: parseFloat(price),
         stock: parseInt(stock, 10),
         color: color || undefined,
         size: size || undefined,
       };
       
-      console.log('Product data to save:', productData);
-      console.log('Image file:', imageFile.name);
-      if (pdfFile) {
-        console.log('PDF file:', pdfFile.name);
-      }
-
       await addProduct(productData, imageFile, pdfFile);
 
       toast({
@@ -86,7 +79,6 @@ export default function AdminProductsPage() {
       });
     } finally {
       setIsSubmitting(false);
-      console.log('Submission finished.');
     }
   };
 
