@@ -4,7 +4,14 @@ export const homePageContent: HomePageContent = {
   heroTitle: "Insumos Médicos de Calidad a tu Alcance",
   heroSubtitle: "Explora nuestro catálogo completo de insumos médicos para profesionales y público en general. Confianza y calidad en cada producto.",
   heroButtonText: "Ver Productos",
-  heroImageUrls: ["https://picsum.photos/1920/1080?random=1", "https://picsum.photos/1920/1080?random=2", "https://picsum.photos/1920/1080?random=3"],
+  heroImageUrls: [
+    "https://picsum.photos/1920/1080?random=1", 
+    "https://picsum.photos/1920/1080?random=2", 
+    "https://picsum.photos/1920/1080?random=3",
+    "https://picsum.photos/1920/1080?random=4",
+    "https://picsum.photos/1920/1080?random=5",
+    "https://picsum.photos/1920/1080?random=6"
+  ],
   whyTitle: "¿Por qué elegirnos?",
   whyDescription: "Ofrecemos una amplia gama de productos médicos de alta calidad, con un servicio al cliente excepcional y entregas rápidas y seguras. Nuestro compromiso es con tu salud y bienestar.",
   whyPoint1: "Calidad Garantizada: Solo trabajamos con las mejores marcas y productos certificados.",
