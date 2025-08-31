@@ -19,8 +19,7 @@ const uploadFile = async (file: File, path: string, contentType: string): Promis
 
 export async function addProductAction(formData: FormData) {
     try {
-        // Explicitly initialize storage to ensure connection is ready in Server Action context
-        getStorage();
+        getStorage(); // Ensures Storage is initialized in the server action context
 
         const priceString = formData.get('price') as string | null;
         const stockString = formData.get('stock') as string | null;
@@ -28,7 +27,7 @@ export async function addProductAction(formData: FormData) {
         if (!priceString || !stockString) {
             return { success: false, error: 'El precio y el stock son obligatorios.' };
         }
-
+        
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrl = formData.get('imageUrl') as string | null;
         const imageContentType = formData.get('imageContentType') as string | null;
