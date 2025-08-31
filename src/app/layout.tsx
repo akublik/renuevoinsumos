@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Chatbot from '@/components/chatbot';
 import { AuthProvider } from '@/context/auth-context';
+import { CartProvider } from '@/context/cart-context';
 
 export const metadata: Metadata = {
   title: 'Insumos Online',
@@ -23,9 +24,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
-          <Chatbot />
-          <Toaster />
+          <CartProvider>
+            {children}
+            <Chatbot />
+            <Toaster />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

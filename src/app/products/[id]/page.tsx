@@ -1,18 +1,73 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { getProductById } from '@/lib/product-service';
-import { notFound } from 'next/navigation';
+import type { Product } from '@/lib/products';
 import Image from 'next/image';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, FileText, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/context/cart-context';
+import { useToast } from '@/hooks/use-toast';
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-  const product = await getProductById(params.id);
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      const fetchedProduct = await getProductById(params.id);
+      setProduct(fetchedProduct);
+      setIsLoading(false);
+    };
+    fetchProduct();
+  }, [params.id]);
+  
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product);
+      toast({
+        title: "Producto agregado",
+        description: `"${product.name}" se ha agregado a tu carrito.`,
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-accent" />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!product) {
-    notFound();
+    return (
+     <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 text-center">
+            <h1 className="text-2xl font-bold mb-4">Producto no encontrado</h1>
+            <p className="text-muted-foreground mb-6">Lo sentimos, no pudimos encontrar el producto que estás buscando.</p>
+            <Button variant="outline" asChild>
+                <Link href="/products">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver al Catálogo
+                </Link>
+            </Button>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -51,7 +106,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" disabled={product.stock === 0}>
+                <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" disabled={product.stock === 0} onClick={handleAddToCart}>
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Agregar al Carrito
                 </Button>
