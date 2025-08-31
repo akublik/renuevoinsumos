@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -8,7 +6,8 @@ import ProductCard from '@/components/product-card';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import type { HomePageContent } from '@/lib/page-content-types';
-import { homePageContent } from '@/lib/page-content-data';
+import { homePageContent as defaultContent } from '@/lib/page-content-data';
+import { getPageContent } from '@/lib/page-content-service';
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
@@ -20,11 +19,9 @@ import {
 import Autoplay from "embla-carousel-autoplay"
 
 
-// Content is now sourced from a local file to avoid Firestore dependency on public pages.
-const content: HomePageContent = homePageContent;
-
-export default function Home() {
+export default async function Home() {
   const featuredProducts = products.slice(0, 4);
+  const content = await getPageContent<HomePageContent>('home') || defaultContent;
 
   return (
     <div className="flex flex-col min-h-screen">

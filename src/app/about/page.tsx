@@ -3,12 +3,12 @@ import Footer from '@/components/footer';
 import Image from 'next/image';
 import { Truck, ShieldCheck, Award } from 'lucide-react';
 import type { AboutPageContent } from '@/lib/page-content-types';
-import { aboutPageContent } from '@/lib/page-content-data';
+import { aboutPageContent as defaultContent } from '@/lib/page-content-data';
+import { getPageContent } from '@/lib/page-content-service';
 
-// Content is now sourced from a local file to avoid Firestore dependency on public pages.
-const content: AboutPageContent = aboutPageContent;
+export default async function AboutPage() {
+  const content = await getPageContent<AboutPageContent>('about') || defaultContent;
 
-export default function AboutPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
