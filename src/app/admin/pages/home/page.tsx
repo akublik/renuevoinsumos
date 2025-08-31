@@ -43,8 +43,9 @@ export default function EditHomePage() {
         const { heroImageUrls, ...textContent } = loadedContent;
         setContent(textContent);
 
+        const imageUrls = heroImageUrls || []; // Ensure heroImageUrls is always an array
         const slots: BannerImageSlot[] = Array(MAX_IMAGES).fill(null).map((_, i) => {
-          const url = heroImageUrls[i];
+          const url = imageUrls[i];
           if (url) {
             return { type: 'url', value: url, preview: url };
           }
