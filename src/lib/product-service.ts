@@ -35,7 +35,7 @@ export async function addProduct(
             pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
-        const productToSave = {
+        const productToSave: any = {
             ...productData,
             price: parseFloat(productData.price as any),
             stock: parseInt(productData.stock as any, 10),
@@ -44,6 +44,19 @@ export async function addProduct(
             technicalSheetUrl: pdfUrl,
             createdAt: serverTimestamp(),
         };
+
+        // Firestore does not accept 'undefined' values.
+        // We need to remove optional fields if they are empty.
+        if (!productToSave.color) {
+            delete productToSave.color;
+        }
+        if (!productToSave.size) {
+            delete productToSave.size;
+        }
+        if (!productToSave.technicalSheetUrl) {
+            delete productToSave.technicalSheetUrl;
+        }
+
 
         const docRef = await addDoc(collection(db, 'products'), productToSave);
         return docRef.id;
