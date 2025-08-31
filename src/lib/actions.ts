@@ -2,7 +2,7 @@
 'use server';
 
 import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent } from './page-content-types';
@@ -19,6 +19,9 @@ const uploadFile = async (file: File, path: string, contentType: string): Promis
 
 export async function addProductAction(formData: FormData) {
     try {
+        // Explicitly initialize storage to ensure connection is ready in Server Action context
+        getStorage();
+
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrl = formData.get('imageUrl') as string | null;
         const imageContentType = formData.get('imageContentType') as string | null;
