@@ -33,26 +33,13 @@ export default function AdminProductsPage() {
     setIsSubmitting(true);
     const form = e.currentTarget;
     const formData = new FormData(form);
-
-    // Clear previous image-related data to avoid confusion
-    formData.delete('imageFile');
-    formData.delete('imageUrl');
-    formData.delete('imageContentType');
-
+    
     // Append the correct image data based on user input
     if (imageFile) {
         formData.append('imageFile', imageFile);
-        formData.append('imageContentType', imageFile.type); // Append content type
+        formData.append('imageContentType', imageFile.type); 
     } else if (imageUrl) {
         formData.append('imageUrl', imageUrl);
-    } else {
-        toast({
-            title: 'Error de validación',
-            description: 'Por favor, proporciona una imagen (sube un archivo o pega una URL).',
-            variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
     }
     
     // Basic client-side validation for other required fields

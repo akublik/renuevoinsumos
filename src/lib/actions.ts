@@ -13,7 +13,6 @@ import type { OrderData } from './orders';
 
 const uploadFile = async (file: File, path: string, contentType: string): Promise<string> => {
     const fileRef = ref(storage, path);
-    // Pass metadata (contentType) during upload
     const snapshot = await uploadBytes(fileRef, file, { contentType });
     return getDownloadURL(snapshot.ref);
 };
@@ -31,17 +30,13 @@ export async function addProductAction(formData: FormData) {
         if (imageUrl) {
             finalImageUrl = imageUrl;
         } else if (imageFile && imageFile.size > 0 && imageContentType) {
-            // Pass contentType to the upload function
             finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
-        }
-
-        if (!finalImageUrl) {
-            return { success: false, error: 'Se requiere una imagen del producto (URL o archivo).' };
+        } else {
+             return { success: false, error: 'Se requiere una imagen del producto (URL o archivo).' };
         }
 
         let pdfUrl: string | undefined;
         if (pdfFile && pdfFile.size > 0) {
-            // For PDFs, we can assume the content type or pass it as well if needed
             pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`, 'application/pdf');
         }
 
@@ -57,12 +52,11 @@ export async function addProductAction(formData: FormData) {
             imageUrl: finalImageUrl,
             images: [finalImageUrl],
             technicalSheetUrl: pdfUrl,
-            createdAt: serverTimestamp() as any, // Cast to any to satisfy serverTimestamp type
+            createdAt: serverTimestamp() as any, 
         };
         
         const productToSave: { [key: string]: any } = { ...productData };
         
-        // Clean up empty optional fields to prevent Firestore errors
         Object.keys(productToSave).forEach(key => {
             if (productToSave[key] === undefined || productToSave[key] === null || productToSave[key] === '') {
                 delete productToSave[key];
