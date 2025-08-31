@@ -16,11 +16,20 @@ const uploadFile = async (file: File, path: string): Promise<string> => {
 
 export async function addProduct(
     productData: AddProductData,
-    imageFile: File,
+    imageSource: File | string, // Can be a file or a URL string
     pdfFile: File | null
 ): Promise<string | null> {
     try {
-        const imageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
+        let imageUrl: string;
+
+        if (typeof imageSource === 'string') {
+            // Use the provided URL directly
+            imageUrl = imageSource;
+        } else {
+            // Upload the file and get the URL
+            imageUrl = await uploadFile(imageSource, `products/${Date.now()}_${imageSource.name}`);
+        }
+
         let pdfUrl: string | undefined = undefined;
         if (pdfFile) {
             pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);

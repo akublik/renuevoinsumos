@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Files, Download, Loader2 } from 'lucide-react';
+import { Upload, Files, Download, Loader2, Link2 } from 'lucide-react';
 import { addProduct, addProductsFromCSV } from '@/lib/product-service';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/products';
@@ -21,7 +21,10 @@ export default function AdminProductsPage() {
   const [stock, setStock] = useState('');
   const [color, setColor] = useState('');
   const [size, setSize] = useState('');
+  
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
+
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -40,20 +43,19 @@ export default function AdminProductsPage() {
     setColor('');
     setSize('');
     setImageFile(null);
+    setImageUrl('');
     setPdfFile(null);
     // Reset file input fields visually
-    const imageInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-    if (imageInput) imageInput.value = '';
-    const pdfInput = document.querySelector('input[type="file"][accept=".pdf"]') as HTMLInputElement;
-    if (pdfInput) pdfInput.value = '';
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => (input as HTMLInputElement).value = '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !stock || !category || !imageFile) {
+    if (!name || !price || !stock || !category || (!imageFile && !imageUrl)) {
       toast({
         title: 'Error de validación',
-        description: 'Por favor, completa todos los campos obligatorios y selecciona una imagen.',
+        description: 'Por favor, completa todos los campos obligatorios y proporciona una imagen (subida o por URL).',
         variant: 'destructive',
       });
       return;
@@ -72,7 +74,8 @@ export default function AdminProductsPage() {
         size: size || undefined,
       };
       
-      const docId = await addProduct(productData, imageFile, pdfFile);
+      const imageSource = imageFile || imageUrl;
+      const docId = await addProduct(productData, imageSource, pdfFile);
 
       if (docId) {
         toast({
@@ -99,8 +102,18 @@ export default function AdminProductsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      if (setFile === setImageFile) {
+        setImageUrl(''); // Clear URL if a file is selected
+      }
     } else {
       setFile(null);
+    }
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(e.target.value);
+    if (e.target.value) {
+      setImageFile(null); // Clear file if a URL is entered
     }
   };
 
@@ -243,11 +256,33 @@ export default function AdminProductsPage() {
                 <Input id="size" placeholder="Ej: M" value={size} onChange={(e) => setSize(e.target.value)} />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Imágen del Producto</Label>
-              <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setImageFile)} className="cursor-pointer" required/>
-              {imageFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {imageFile.name}</p>}
+            
+            <div className="grid gap-3">
+                <Label>Imágen del Producto</Label>
+                <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-muted-foreground"/>
+                    <Input 
+                        type="text" 
+                        placeholder="Pega una URL de imagen aquí" 
+                        value={imageUrl}
+                        onChange={handleImageUrlChange}
+                        disabled={isSubmitting}
+                    />
+                </div>
+                <div className="relative flex items-center justify-center my-2">
+                    <span className="text-xs text-muted-foreground px-2 bg-card z-10">o</span>
+                    <div className="absolute top-1/2 left-0 w-full h-px bg-border"></div>
+                </div>
+                <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handleFileChange(e, setImageFile)} 
+                    className="cursor-pointer" 
+                    disabled={isSubmitting}
+                />
+                {imageFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {imageFile.name}</p>}
             </div>
+
             <div className="grid gap-2">
               <Label>Ficha Técnica (PDF, Opcional)</Label>
               <Input type="file" accept=".pdf" onChange={(e) => handleFileChange(e, setPdfFile)} className="cursor-pointer" />
