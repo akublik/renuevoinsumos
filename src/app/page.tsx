@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -17,11 +19,34 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
+import { useEffect, useState } from 'react';
 
 
-export default async function Home() {
+export default function Home() {
   const featuredProducts = products.slice(0, 4);
-  const content = await getPageContent<HomePageContent>('home') || defaultContent;
+  const [content, setContent] = useState<HomePageContent | null>(null);
+
+  useEffect(() => {
+    async function loadContent() {
+      const pageContent = await getPageContent<HomePageContent>('home');
+      setContent(pageContent || defaultContent);
+    }
+    loadContent();
+  }, []);
+
+
+  if (!content) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <div className="relative bg-gray-200 h-[60vh] md:h-[70vh] flex items-center justify-center animate-pulse"></div>
+          {/* You can add more skeleton loaders here if you want */}
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
