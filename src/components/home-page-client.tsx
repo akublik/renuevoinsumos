@@ -37,24 +37,18 @@ export default function HomePageClient({ content, featuredProducts }: HomePageCl
           }}
         >
           <CarouselContent className="w-full h-full">
-            {content.heroImageUrls && content.heroImageUrls.length > 0 ? (
-              content.heroImageUrls.map((url, index) => (
-                <CarouselItem key={index} className="w-full h-full">
-                  <Image
-                    src={url}
-                    alt={`Banner principal ${index + 1}`}
-                    fill
-                    className="object-cover w-full h-full"
-                    priority={index === 0}
-                    data-ai-hint="medical physiotherapy"
-                  />
-                </CarouselItem>
-              ))
-            ) : (
-                <CarouselItem className="w-full h-full">
-                    <div className="w-full h-full bg-gray-200" />
-                </CarouselItem>
-            )}
+            {content.heroImageUrls.map((url, index) => (
+              <CarouselItem key={index} className="w-full h-full">
+                <Image
+                  src={url}
+                  alt={`Banner principal ${index + 1}`}
+                  fill
+                  className="object-cover w-full h-full"
+                  priority={index === 0}
+                  data-ai-hint="medical physiotherapy"
+                />
+              </CarouselItem>
+            ))}
           </CarouselContent>
           <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
           <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
