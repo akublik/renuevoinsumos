@@ -1,3 +1,4 @@
+
 'use server';
 
 import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
@@ -7,6 +8,7 @@ import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent } from './page-content-types';
 import type { Product } from './products';
 import Papa from 'papaparse';
+import type { OrderData } from './orders';
 
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
@@ -212,4 +214,17 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
     }
 }
 
-    
+export async function createOrderAction(orderData: OrderData) {
+  try {
+    const orderToSave = {
+      ...orderData,
+      createdAt: serverTimestamp(),
+    };
+    const docRef = await addDoc(collection(db, 'orders'), orderToSave);
+    revalidatePath('/admin/orders');
+    return { success: true, orderId: docRef.id };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to create order.' };
+  }
+}

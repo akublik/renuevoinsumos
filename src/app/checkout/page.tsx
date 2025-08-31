@@ -14,9 +14,10 @@ import Footer from "@/components/footer";
 import { useCart } from "@/context/cart-context";
 import Image from "next/image";
 import { useFormToast } from "@/hooks/use-form-toast";
-import { CreditCard, Truck, Banknote } from "lucide-react";
+import { CreditCard, Truck, Banknote, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { createOrderAction } from "@/lib/actions";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -44,37 +45,51 @@ export default function CheckoutPage() {
       address: "",
       city: "",
       country: "",
+      paymentMethod: "cash",
     },
   });
   
   // Redirect to home if cart is empty
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
       router.push('/');
     }
-  }, [cartItems, router]);
+  }, [cartItems, router, form.formState.isSubmitSuccessful]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Here you would typically process the order, e.g., save it to a database
-      // and handle payment processing. For now, we'll simulate a successful order.
-      console.log("Order submitted:", { ...values, items: cartItems, total: getCartTotal() });
-      
-      toast({
-        title: "¡Pedido Realizado!",
-        description: "Gracias por tu compra. Hemos recibido tu pedido y lo estamos procesando.",
-      });
+      const totalAmount = parseFloat(getCartTotal());
+      const orderData = {
+        customer: values,
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: totalAmount,
+        status: 'Pendiente' as const,
+      };
 
-      // Clear the cart and redirect to the homepage after a short delay
-      clearCart();
-      setTimeout(() => router.push('/'), 3000);
+      const result = await createOrderAction(orderData);
+      
+      if (result.success) {
+        toast({
+          title: "¡Pedido Realizado!",
+          description: "Gracias por tu compra. Hemos recibido tu pedido y lo estamos procesando.",
+        });
+        clearCart();
+        setTimeout(() => router.push('/'), 3000);
+      } else {
+        throw new Error(result.error || "No se pudo crear el pedido.");
+      }
 
     } catch (error) {
-       toastError("Hubo un error al procesar tu pedido. Por favor, intenta de nuevo.");
+       toastError(error instanceof Error ? error.message : "Hubo un error al procesar tu pedido. Por favor, intenta de nuevo.");
     }
   }
   
-  if (cartItems.length === 0) {
+  if (cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
@@ -173,6 +188,7 @@ export default function CheckoutPage() {
                   </CardContent>
                 </Card>
                 <Button type="submit" size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {form.formState.isSubmitting ? 'Procesando...' : 'Confirmar Pedido'}
                 </Button>
               </form>
