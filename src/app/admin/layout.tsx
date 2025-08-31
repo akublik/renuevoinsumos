@@ -13,19 +13,31 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return; // Espera a que termine la carga
+
+    if (!user) {
+      // Si no hay usuario, redirige al login
       router.push('/login');
+      return;
     }
+
+    // Si el usuario no es el admin, redirige a la página de inicio
+    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+      router.push('/');
+    }
+
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  // Muestra un estado de carga mientras se verifica el usuario y su rol
+  if (loading || !user || user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div>Cargando...</div>
+        <div>Verificando acceso...</div>
       </div>
     );
   }
 
+  // Si todo es correcto, muestra el layout del admin
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
