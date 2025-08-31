@@ -35,6 +35,7 @@ export async function addProduct(
             pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
+        // Create the full product object first
         const productToSave: any = {
             ...productData,
             price: parseFloat(productData.price as any),
@@ -46,7 +47,7 @@ export async function addProduct(
         };
 
         // Firestore does not accept 'undefined' values.
-        // We need to remove optional fields if they are empty.
+        // Now, safely remove optional fields if they are empty or undefined.
         if (!productToSave.color) {
             delete productToSave.color;
         }
