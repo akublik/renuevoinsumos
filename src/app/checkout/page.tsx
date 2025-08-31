@@ -14,12 +14,11 @@ import Footer from "@/components/footer";
 import { useCart } from "@/context/cart-context";
 import Image from "next/image";
 import { useFormToast } from "@/hooks/use-form-toast";
-import { CreditCard, Truck, Banknote, Loader2, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { CreditCard, Truck, Banknote, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { createOrderAction } from "@/lib/actions";
 import { useAuth } from "@/context/auth-context";
-import Link from "next/link";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -52,6 +51,13 @@ export default function CheckoutPage() {
     },
   });
   
+  // Redirect guest users to login page
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login?redirect=/checkout');
+    }
+  }, [user, loading, router]);
+  
   // Redirect to home if cart is empty
   useEffect(() => {
     if (!loading && cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
@@ -68,6 +74,7 @@ export default function CheckoutPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
         toastError("Debes iniciar sesión para realizar un pedido.");
+        router.push('/login?redirect=/checkout');
         return;
     }
 
@@ -104,34 +111,19 @@ export default function CheckoutPage() {
     }
   }
   
-  if (loading) {
+  if (loading || !user) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="ml-2">Cargando y verificando autenticación...</p>
             </main>
             <Footer />
         </div>
     );
   }
 
-  if (!user) {
-      return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center text-center">
-                <User className="h-12 w-12 text-muted-foreground mb-4" />
-                <h1 className="text-2xl font-bold font-headline mb-2">Inicia sesión para continuar</h1>
-                <p className="text-muted-foreground mb-6">Necesitas una cuenta para poder finalizar tu compra.</p>
-                <Button asChild>
-                    <Link href="/login">Ir a Iniciar Sesión</Link>
-                </Button>
-            </main>
-            <Footer />
-        </div>
-      )
-  }
 
   return (
     <div className="flex flex-col min-h-screen">

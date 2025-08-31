@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,12 +14,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { loginUser } from '@/lib/auth-service';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/admin/products';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +30,7 @@ export default function LoginPage() {
     try {
       const user = await loginUser(email, password);
       if (user) {
-        router.push('/admin/products');
+        router.push(redirectUrl);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido.');
@@ -89,7 +92,7 @@ export default function LoginPage() {
             </form>
             <div className="mt-4 text-center text-sm">
               ¿No tienes una cuenta?{' '}
-              <Link href="/register" className="underline">
+              <Link href={`/register?redirect=${encodeURIComponent(redirectUrl)}`} className="underline">
                 Regístrate
               </Link>
             </div>
@@ -98,5 +101,13 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

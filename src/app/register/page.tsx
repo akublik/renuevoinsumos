@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { registerUser } from '@/lib/auth-service';
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +22,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/admin/products';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +37,7 @@ export default function RegisterPage() {
       const user = await registerUser(email, password);
       if (user) {
         // Here you might want to save the full name to Firestore user profile
-        router.push('/admin/products');
+        router.push(redirectUrl);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido.');
@@ -111,7 +114,7 @@ export default function RegisterPage() {
             </form>
             <div className="mt-4 text-center text-sm">
               ¿Ya tienes una cuenta?{' '}
-              <Link href="/login" className="underline">
+              <Link href={`/login?redirect=${encodeURIComponent(redirectUrl)}`} className="underline">
                 Inicia Sesión
               </Link>
             </div>
@@ -121,4 +124,13 @@ export default function RegisterPage() {
       <Footer />
     </div>
   );
+}
+
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div>Cargando...</div>}>
+            <RegisterPageContent />
+        </Suspense>
+    )
 }
