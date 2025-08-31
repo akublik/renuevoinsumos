@@ -14,10 +14,12 @@ import Footer from "@/components/footer";
 import { useCart } from "@/context/cart-context";
 import Image from "next/image";
 import { useFormToast } from "@/hooks/use-form-toast";
-import { CreditCard, Truck, Banknote, Loader2 } from "lucide-react";
+import { CreditCard, Truck, Banknote, Loader2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createOrderAction } from "@/lib/actions";
+import { useAuth } from "@/context/auth-context";
+import Link from "next/link";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -33,6 +35,7 @@ const formSchema = z.object({
 
 export default function CheckoutPage() {
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { toast, toastError } = useFormToast();
 
@@ -51,15 +54,27 @@ export default function CheckoutPage() {
   
   // Redirect to home if cart is empty
   useEffect(() => {
-    if (cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
+    if (!loading && cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
       router.push('/');
     }
-  }, [cartItems, router, form.formState.isSubmitSuccessful]);
+  }, [cartItems, router, form.formState.isSubmitSuccessful, loading]);
+
+  useEffect(() => {
+    if (!loading && user) {
+        form.setValue('email', user.email || '');
+    }
+  }, [user, loading, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+        toastError("Debes iniciar sesión para realizar un pedido.");
+        return;
+    }
+
     try {
       const totalAmount = parseFloat(getCartTotal());
       const orderData = {
+        userId: user.uid,
         customer: values,
         items: cartItems.map(item => ({
           id: item.id,
@@ -89,16 +104,33 @@ export default function CheckoutPage() {
     }
   }
   
-  if (cartItems.length === 0 && !form.formState.isSubmitSuccessful) {
+  if (loading) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow flex items-center justify-center">
-                <p>Tu carrito está vacío. Redirigiendo...</p>
+                <Loader2 className="h-8 w-8 animate-spin" />
             </main>
             <Footer />
         </div>
     );
+  }
+
+  if (!user) {
+      return (
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center text-center">
+                <User className="h-12 w-12 text-muted-foreground mb-4" />
+                <h1 className="text-2xl font-bold font-headline mb-2">Inicia sesión para continuar</h1>
+                <p className="text-muted-foreground mb-6">Necesitas una cuenta para poder finalizar tu compra.</p>
+                <Button asChild>
+                    <Link href="/login">Ir a Iniciar Sesión</Link>
+                </Button>
+            </main>
+            <Footer />
+        </div>
+      )
   }
 
   return (
@@ -126,7 +158,7 @@ export default function CheckoutPage() {
                     <FormField control={form.control} name="email" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Correo Electrónico</FormLabel>
-                        <FormControl><Input placeholder="tu@correo.com" {...field} /></FormControl>
+                        <FormControl><Input placeholder="tu@correo.com" {...field} readOnly /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

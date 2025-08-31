@@ -17,6 +17,7 @@ export interface CustomerInfo {
 }
 
 export interface OrderData {
+  userId: string;
   customer: CustomerInfo;
   items: OrderItem[];
   total: number;
