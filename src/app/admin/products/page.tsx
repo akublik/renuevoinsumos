@@ -7,31 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Files, Download, Loader2, Link2 } from 'lucide-react';
-import { addProductAction } from '@/lib/actions';
-import { addProductsFromCSV } from '@/lib/product-service';
+import { Upload, Download, Loader2, Link2 } from 'lucide-react';
+import { addProductAction, addProductsFromCSVAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import type { Product } from '@/lib/products';
 
 export default function AdminProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
+
 
   // Function to reset the form via its native API
   const resetForm = (form: HTMLFormElement) => {
     form.reset();
-    // Manually clear any state that isn't part of the form's native state
-    const categorySelect = form.querySelector('[role="combobox"]');
-    if (categorySelect) {
-      const trigger = categorySelect as HTMLElement;
-      // This is a bit of a hack to reset the visual of the ShadCN select
-      const valueElement = trigger.querySelector('.text-sm');
-      if (valueElement) {
-        valueElement.innerHTML = 'Selecciona una categoría';
-      }
-    }
+    setImageFile(null);
+    setImageUrl('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,8 +33,15 @@ export default function AdminProductsPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    // Append the file if it exists, otherwise append the URL
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+    } else {
+        formData.append('imageUrl', imageUrl);
+    }
+
     // Basic client-side validation
-    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category') || (!formData.get('imageFile') && !formData.get('imageUrl'))) {
+    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category') || (!imageFile && !imageUrl)) {
         toast({
             title: 'Error de validación',
             description: 'Por favor, completa todos los campos obligatorios y proporciona una imagen.',
@@ -50,6 +50,10 @@ export default function AdminProductsPage() {
         setIsSubmitting(false);
         return;
     }
+    
+    // Clear image inputs from formData if they are empty, so the server action receives the correct one
+    if(!imageFile) formData.delete('imageFile');
+    if(!imageUrl) formData.delete('imageUrl');
 
     try {
         const result = await addProductAction(formData);
@@ -73,12 +77,25 @@ export default function AdminProductsPage() {
         setIsSubmitting(false);
     }
   };
+  
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setImageFile(e.target.files[0]);
+          setImageUrl(''); // Clear the URL input if a file is selected
+      }
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void) => {
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setImageUrl(e.target.value);
+      setImageFile(null); // Clear the file input if a URL is entered
+  };
+
+
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      setCsvFile(e.target.files[0]);
     } else {
-      setFile(null);
+      setCsvFile(null);
     }
   };
 
@@ -92,24 +109,31 @@ export default function AdminProductsPage() {
       return;
     }
     setIsUploadingCsv(true);
+
     try {
-      const result = await addProductsFromCSV(csvFile);
-      toast({
-        title: 'Importación CSV completada',
-        description: `${result.successCount} productos importados. ${result.errorCount} errores. Revisa la consola para más detalles.`,
-      });
+        const fileContent = await csvFile.text();
+        const result = await addProductsFromCSVAction(fileContent);
+
+        if (result.success) {
+            toast({
+                title: 'Importación CSV completada',
+                description: `${result.successCount} productos importados. ${result.errorCount} errores.`,
+            });
+        } else {
+            throw new Error(result.error || "Ocurrió un error en la importación.");
+        }
     } catch (error) {
-      console.error("Error importing CSV:", error);
-      toast({
-        title: 'Error en la importación',
-        description: `Hubo un problema al procesar el archivo CSV: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-        variant: 'destructive',
-      });
+        console.error("Error importing CSV:", error);
+        toast({
+            title: 'Error en la importación',
+            description: `Hubo un problema al procesar el archivo CSV: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+            variant: 'destructive',
+        });
     } finally {
-      setIsUploadingCsv(false);
-      setCsvFile(null);
-      const csvInput = document.querySelector('input[type="file"][accept=".csv"]') as HTMLInputElement;
-      if (csvInput) csvInput.value = '';
+        setIsUploadingCsv(false);
+        setCsvFile(null);
+        const csvInput = document.querySelector('input[type="file"][accept=".csv"]') as HTMLInputElement;
+        if (csvInput) csvInput.value = '';
     }
   };
   
@@ -145,7 +169,7 @@ export default function AdminProductsPage() {
               <Input 
                 type="file" 
                 accept=".csv" 
-                onChange={(e) => handleFileChange(e, setCsvFile)} 
+                onChange={handleCsvFileChange} 
                 className="cursor-pointer"
               />
               {csvFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {csvFile.name}</p>}
@@ -204,7 +228,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Precio</Label>
-                <Input id="price" name="price" type="number" placeholder="0.00" required />
+                <Input id="price" name="price" type="number" step="0.01" placeholder="0.00" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="stock">Stock</Label>
@@ -228,8 +252,10 @@ export default function AdminProductsPage() {
                     <Link2 className="h-4 w-4 text-muted-foreground"/>
                     <Input 
                         type="text" 
-                        name="imageUrl"
+                        name="imageUrlInput"
                         placeholder="Pega una URL de imagen aquí" 
+                        value={imageUrl}
+                        onChange={handleImageUrlChange}
                         disabled={isSubmitting}
                     />
                 </div>
@@ -239,8 +265,9 @@ export default function AdminProductsPage() {
                 </div>
                 <Input 
                     type="file" 
-                    name="imageFile"
+                    name="imageFileInput"
                     accept="image/*" 
+                    onChange={handleImageFileChange}
                     className="cursor-pointer" 
                     disabled={isSubmitting}
                 />
@@ -263,3 +290,5 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+    

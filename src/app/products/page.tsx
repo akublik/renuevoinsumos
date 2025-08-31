@@ -1,4 +1,5 @@
-import { products, categories } from '@/lib/products';
+import { getProductsFromFirestore } from '@/lib/product-service';
+import { categories } from '@/lib/products';
 import ProductCard from '@/components/product-card';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -6,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getProductsFromFirestore();
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -36,11 +39,17 @@ export default function ProductsPage() {
             </Card>
           </aside>
           <section className="w-full md:w-3/4 lg:w-4/5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {products.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                ))}
+                </div>
+            ) : (
+                <div className="text-center text-muted-foreground">
+                    <p>No se encontraron productos. Intenta agregar algunos desde el panel de administración.</p>
+                </div>
+            )}
           </section>
         </div>
       </main>

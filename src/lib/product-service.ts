@@ -1,93 +1,60 @@
-import { db, storage } from './firebase';
-import { collection, writeBatch, serverTimestamp } from 'firebase/firestore';
+'use server';
+
+import { db } from './firebase';
+import { collection, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, doc } from 'firebase/firestore';
 import { products as localProducts, type Product } from './products';
-import Papa from 'papaparse';
 
 /**
  * Fetches products. This function now consistently returns local mock data
- * for all public-facing parts of the application to prevent permission errors.
- * Firestore fetching will be handled separately in authenticated admin components.
+ * for the chatbot to prevent permission errors for unauthenticated users.
  */
 export async function getProducts(): Promise<Product[]> {
-  // Always return local data for public users to avoid any permission issues.
   return Promise.resolve(localProducts as Product[]);
 }
 
-
-const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
-
-type CsvRow = {
-    PRODUCTO: string;
-    MARCA: string;
-    DESCRIPCION: string;
-    CATEGORIA: string;
-    PRECIO: string;
-    STOCK: string;
-    COLOR?: string;
-    TALLA?: string;
-    IMAGEN: string;
-};
-
-export const addProductsFromCSV = (file: File): Promise<{ successCount: number; errorCount: number; }> => {
-    return new Promise((resolve, reject) => {
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: async (results) => {
-                const rows = results.data as CsvRow[];
-                let successCount = 0;
-                let errorCount = 0;
-
-                const batch = writeBatch(db);
-
-                for (const row of rows) {
-                    try {
-                        const price = parseFloat(row.PRECIO);
-                        const stock = parseInt(row.STOCK, 10);
-                        const category = row.CATEGORIA as Product['category'];
-
-                        if (!row.PRODUCTO || !row.IMAGEN || isNaN(price) || isNaN(stock) || !validCategories.includes(category)) {
-                           console.error('Invalid or incomplete row data, skipping:', row);
-                           errorCount++;
-                           continue;
-                        }
-
-                        const newProduct: Omit<Product, 'id'> = {
-                            name: row.PRODUCTO,
-                            brand: row.MARCA,
-                            description: row.DESCRIPCION,
-                            category: category,
-                            price: price,
-                            stock: stock,
-                            imageUrl: row.IMAGEN,
-                            images: [row.IMAGEN],
-                            color: row.COLOR || undefined,
-                            size: row.TALLA || undefined,
-                            createdAt: new Date(), // Using client-side date for CSV
-                        };
-                        
-                        const docRef = collection(db, "products").doc();
-                        batch.set(docRef, { ...newProduct, createdAt: serverTimestamp() });
-                        successCount++;
-
-                    } catch(e) {
-                        console.error('Error processing row:', row, e);
-                        errorCount++;
-                    }
-                }
-                
-                try {
-                    await batch.commit();
-                    resolve({ successCount, errorCount });
-                } catch (e) {
-                     console.error("Error committing batch:", e);
-                     reject(e);
-                }
-            },
-            error: (error) => {
-                console.error("Error parsing CSV:", error);
-                reject(error);
-            }
-        });
+/**
+ * Fetches all products directly from Firestore.
+ * Intended for server-side use where permissions are handled securely.
+ */
+export async function getProductsFromFirestore(productLimit?: number): Promise<Product[]> {
+  try {
+    const productsRef = collection(db, 'products');
+    let q;
+    if (productLimit) {
+        q = query(productsRef, orderBy('createdAt', 'desc'), limit(productLimit));
+    } else {
+        q = query(productsRef, orderBy('createdAt', 'desc'));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    
+    const firestoreProducts = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Firestore timestamps need to be converted to serializable format for client components
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+      
+      return {
+        id: doc.id,
+        name: data.name || '',
+        brand: data.brand || '',
+        description: data.description || '',
+        category: data.category || 'Consumibles',
+        price: data.price || 0,
+        stock: data.stock || 0,
+        imageUrl: data.imageUrl || '',
+        images: data.images || [],
+        color: data.color,
+        size: data.size,
+        technicalSheetUrl: data.technicalSheetUrl,
+        createdAt: createdAt,
+      } as unknown as Product; // Using unknown cast due to timestamp serialization
     });
-};
+
+    return firestoreProducts;
+  } catch (error) {
+    console.error("Error fetching products from Firestore:", error);
+    return []; // Return an empty array on error
+  }
+}
+
+    

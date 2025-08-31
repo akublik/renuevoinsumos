@@ -1,10 +1,13 @@
 'use server';
 
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent } from './page-content-types';
+import type { Product } from './products';
+import Papa from 'papaparse';
+
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
     const fileRef = ref(storage, path);
@@ -31,37 +34,40 @@ export async function addProductAction(formData: FormData) {
             return { success: false, error: 'Se requiere una imagen del producto (URL o archivo).' };
         }
 
-        let pdfUrl: string | undefined = undefined;
+        let pdfUrl: string | undefined;
         if (pdfFile && pdfFile.size > 0) {
             pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
-        const productData: any = {
+        const productData: Omit<Product, 'id'> = {
             name: productName,
             brand: formData.get('brand') as string,
             description: formData.get('description') as string,
-            category: formData.get('category') as string,
+            category: formData.get('category') as Product['category'],
             price: parseFloat(formData.get('price') as string),
             stock: parseInt(formData.get('stock') as string, 10),
-            color: formData.get('color') as string,
-            size: formData.get('size') as string,
+            color: formData.get('color') as string || undefined,
+            size: formData.get('size') as string || undefined,
             imageUrl: finalImageUrl,
             images: [finalImageUrl],
             technicalSheetUrl: pdfUrl,
-            createdAt: serverTimestamp(),
+            createdAt: serverTimestamp() as any, // Cast to any to satisfy serverTimestamp type
         };
         
+        const productToSave: { [key: string]: any } = { ...productData };
+        
         // Clean up empty optional fields to prevent Firestore errors
-        Object.keys(productData).forEach(key => {
-            if (productData[key] === '' || productData[key] === undefined || productData[key] === null) {
-                delete productData[key];
+        Object.keys(productToSave).forEach(key => {
+            if (productToSave[key] === undefined || productToSave[key] === null || productToSave[key] === '') {
+                delete productToSave[key];
             }
         });
 
 
-        const docRef = await addDoc(collection(db, 'products'), productData);
+        const docRef = await addDoc(collection(db, 'products'), productToSave);
         
         revalidatePath('/admin/products');
+        revalidatePath('/products');
         
         return { success: true, docId: docRef.id, productName };
 
@@ -121,3 +127,89 @@ export async function updateAboutPageContentAction(content: AboutPageContent) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to update page content.' };
     }
 }
+
+const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
+
+type CsvRow = {
+    PRODUCTO: string;
+    MARCA: string;
+    DESCRIPCION: string;
+    CATEGORIA: string;
+    PRECIO: string;
+    STOCK: string;
+    COLOR?: string;
+    TALLA?: string;
+    IMAGEN: string;
+};
+
+export async function addProductsFromCSVAction(csvContent: string): Promise<{ success: boolean; successCount?: number; errorCount?: number; error?: string }> {
+    try {
+        const results = Papa.parse<CsvRow>(csvContent, {
+            header: true,
+            skipEmptyLines: true,
+        });
+
+        const rows = results.data;
+        let successCount = 0;
+        let errorCount = 0;
+
+        const batch = writeBatch(db);
+
+        for (const row of rows) {
+            try {
+                const price = parseFloat(row.PRECIO);
+                const stock = parseInt(row.STOCK, 10);
+                const category = row.CATEGORIA as Product['category'];
+
+                if (!row.PRODUCTO || !row.IMAGEN || isNaN(price) || isNaN(stock) || !validCategories.includes(category)) {
+                   console.error('Invalid or incomplete row data, skipping:', row);
+                   errorCount++;
+                   continue;
+                }
+
+                const newProduct: Omit<Product, 'id' | 'createdAt'> = {
+                    name: row.PRODUCTO,
+                    brand: row.MARCA,
+                    description: row.DESCRIPCION,
+                    category: category,
+                    price: price,
+                    stock: stock,
+                    imageUrl: row.IMAGEN,
+                    images: [row.IMAGEN],
+                    color: row.COLOR || undefined,
+                    size: row.TALLA || undefined,
+                };
+                
+                const docRef = doc(collection(db, "products"));
+                
+                const productToSave: { [key: string]: any } = { ...newProduct, createdAt: serverTimestamp() };
+
+                // Clean up empty optional fields to prevent Firestore errors
+                Object.keys(productToSave).forEach(key => {
+                    if (productToSave[key] === undefined || productToSave[key] === null || productToSave[key] === '') {
+                        delete productToSave[key];
+                    }
+                });
+
+                batch.set(docRef, productToSave);
+                successCount++;
+
+            } catch(e) {
+                console.error('Error processing row:', row, e);
+                errorCount++;
+            }
+        }
+        
+        await batch.commit();
+        revalidatePath('/admin/products');
+        revalidatePath('/products');
+
+        return { success: true, successCount, errorCount };
+
+    } catch (error) {
+        console.error("Error in addProductsFromCSVAction: ", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+}
+
+    
