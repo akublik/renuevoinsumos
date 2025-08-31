@@ -5,7 +5,7 @@ import type { HomePageContent, AboutPageContent } from './page-content-types';
 
 const pagesCollection = 'pages';
 
-type BannerImageSlot = {
+export type BannerImageSlot = {
   type: 'url' | 'file' | 'empty';
   value: string | File | null;
   preview: string | null;
@@ -43,25 +43,37 @@ const uploadFile = async (file: File, path: string): Promise<string> => {
 };
 
 export async function updateHomePageContent(
-  pageName: string, 
-  content: Omit<HomePageContent, 'heroImageUrls'>, 
+  pageName: string,
+  content: Omit<HomePageContent, 'heroImageUrls'>,
   imageSlots: BannerImageSlot[]
 ): Promise<void> {
   try {
     const newImageUrls: string[] = [];
 
-    for (const slot of imageSlots) {
+    // Process all image slots asynchronously
+    const processedUrls = await Promise.all(
+      imageSlots.map(async (slot) => {
         if (slot.type === 'file' && slot.value instanceof File) {
-            const uploadedUrl = await uploadFile(slot.value, `pages/${pageName}/banner_${Date.now()}_${slot.value.name}`);
-            newImageUrls.push(uploadedUrl);
-        } else if (slot.type === 'url' && typeof slot.value === 'string' && slot.value.trim() !== '') {
-            newImageUrls.push(slot.value);
+          // Case 1: A new file has been uploaded
+          return await uploadFile(
+            slot.value,
+            `pages/${pageName}/banner_${Date.now()}_${slot.value.name}`
+          );
+        } else if (slot.type === 'url' && typeof slot.value === 'string' && slot.value.trim()) {
+          // Case 2: A URL is present (either new or existing)
+          return slot.value;
         }
-    }
+        // Case 3: The slot is empty or unchanged in a way we don't need to process
+        return null;
+      })
+    );
     
-    const contentToSave = {
+    // Filter out null values to get the final list of URLs
+    const finalImageUrls = processedUrls.filter((url): url is string => url !== null);
+
+    const contentToSave: HomePageContent = {
         ...content,
-        heroImageUrls: newImageUrls
+        heroImageUrls: finalImageUrls
     };
     
     const docRef = doc(db, pagesCollection, pageName);
