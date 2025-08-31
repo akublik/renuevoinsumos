@@ -22,6 +22,13 @@ export async function addProductAction(formData: FormData) {
         // Explicitly initialize storage to ensure connection is ready in Server Action context
         getStorage();
 
+        const priceString = formData.get('price') as string | null;
+        const stockString = formData.get('stock') as string | null;
+
+        if (!priceString || !stockString) {
+            return { success: false, error: 'El precio y el stock son obligatorios.' };
+        }
+
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrl = formData.get('imageUrl') as string | null;
         const imageContentType = formData.get('imageContentType') as string | null;
@@ -48,8 +55,8 @@ export async function addProductAction(formData: FormData) {
             brand: formData.get('brand') as string,
             description: formData.get('description') as string,
             category: formData.get('category') as Product['category'],
-            price: parseFloat(formData.get('price') as string),
-            stock: parseInt(formData.get('stock') as string, 10),
+            price: parseFloat(priceString),
+            stock: parseInt(stockString, 10),
             color: formData.get('color') as string || undefined,
             size: formData.get('size') as string || undefined,
             imageUrl: finalImageUrl,
