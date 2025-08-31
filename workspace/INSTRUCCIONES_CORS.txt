@@ -1,0 +1,14 @@
+
+PASOS PARA SOLUCIONAR EL ERROR DE SUBIDA DE IMÁGENES:
+
+Hemos detectado que el error al guardar productos se debe a la configuración de permisos (CORS) en tu Firebase Storage.
+
+Para solucionarlo, por favor, sigue estos dos sencillos pasos en tu terminal:
+
+1. Instala la herramienta de línea de comandos de Google Cloud (si no la tienes):
+   gcloud components install gcloud-storage
+
+2. Aplica el archivo de configuración que hemos creado para ti. Reemplaza [TU_STORAGE_BUCKET] con el ID de tu bucket de almacenamiento (lo puedes encontrar en la consola de Firebase en la sección Storage, y normalmente tiene el formato 'tu-proyecto-id.appspot.com'):
+   gcloud storage buckets update gs://[TU_STORAGE_BUCKET] --cors-file=./cors.json
+
+Una vez que ejecutes este comando, el error de subida de archivos debería estar solucionado.
