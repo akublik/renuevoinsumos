@@ -48,22 +48,20 @@ export async function updateHomePageContent(
   imageSlots: BannerImageSlot[]
 ): Promise<void> {
   try {
-    const newImageUrls: string[] = [];
-
-    // Process all image slots asynchronously
     const processedUrls = await Promise.all(
       imageSlots.map(async (slot) => {
+        // Case 1: A new file has been uploaded
         if (slot.type === 'file' && slot.value instanceof File) {
-          // Case 1: A new file has been uploaded
           return await uploadFile(
             slot.value,
             `pages/${pageName}/banner_${Date.now()}_${slot.value.name}`
           );
-        } else if (slot.type === 'url' && typeof slot.value === 'string' && slot.value.trim()) {
-          // Case 2: A URL is present (either new or existing)
+        }
+        // Case 2: An existing URL or a newly pasted URL is present
+        if (slot.type === 'url' && typeof slot.value === 'string') {
           return slot.value;
         }
-        // Case 3: The slot is empty or unchanged in a way we don't need to process
+        // Case 3: The slot is empty
         return null;
       })
     );
