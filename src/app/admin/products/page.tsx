@@ -37,10 +37,12 @@ export default function AdminProductsPage() {
     // Clear previous image-related data to avoid confusion
     formData.delete('imageFile');
     formData.delete('imageUrl');
+    formData.delete('imageContentType');
 
     // Append the correct image data based on user input
     if (imageFile) {
         formData.append('imageFile', imageFile);
+        formData.append('imageContentType', imageFile.type); // Append content type
     } else if (imageUrl) {
         formData.append('imageUrl', imageUrl);
     } else {
@@ -299,7 +301,3 @@ export default function AdminProductsPage() {
     </div>
   );
 }
-
-    
-
-    

@@ -11,9 +11,10 @@ import Papa from 'papaparse';
 import type { OrderData } from './orders';
 
 
-const uploadFile = async (file: File, path: string): Promise<string> => {
+const uploadFile = async (file: File, path: string, contentType: string): Promise<string> => {
     const fileRef = ref(storage, path);
-    const snapshot = await uploadBytes(fileRef, file);
+    // Pass metadata (contentType) during upload
+    const snapshot = await uploadBytes(fileRef, file, { contentType });
     return getDownloadURL(snapshot.ref);
 };
 
@@ -21,6 +22,7 @@ export async function addProductAction(formData: FormData) {
     try {
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrl = formData.get('imageUrl') as string | null;
+        const imageContentType = formData.get('imageContentType') as string | null;
         const pdfFile = formData.get('pdfFile') as File | null;
         const productName = formData.get('name') as string;
 
@@ -28,8 +30,9 @@ export async function addProductAction(formData: FormData) {
 
         if (imageUrl) {
             finalImageUrl = imageUrl;
-        } else if (imageFile && imageFile.size > 0) {
-            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
+        } else if (imageFile && imageFile.size > 0 && imageContentType) {
+            // Pass contentType to the upload function
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
         }
 
         if (!finalImageUrl) {
@@ -38,7 +41,8 @@ export async function addProductAction(formData: FormData) {
 
         let pdfUrl: string | undefined;
         if (pdfFile && pdfFile.size > 0) {
-            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
+            // For PDFs, we can assume the content type or pass it as well if needed
+            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`, 'application/pdf');
         }
 
         const productData: Omit<Product, 'id'> = {
@@ -228,5 +232,3 @@ export async function createOrderAction(orderData: OrderData) {
     return { success: false, error: error instanceof Error ? error.message : 'Failed to create order.' };
   }
 }
-
-    
