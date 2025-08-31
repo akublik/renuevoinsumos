@@ -1,9 +1,15 @@
 import { db, storage } from './firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import type { HomePageContent, AboutPageContent } from './page-content-types';
 
 const pagesCollection = 'pages';
+
+type BannerImageSlot = {
+  type: 'url' | 'file' | 'empty';
+  value: string | File | null;
+  preview: string | null;
+};
 
 /**
  * Fetches the content for a specific page from Firestore.
@@ -36,20 +42,27 @@ const uploadFile = async (file: File, path: string): Promise<string> => {
     return getDownloadURL(snapshot.ref);
 };
 
-export async function updateHomePageContent(pageName: string, content: HomePageContent, bannerImages: File[]): Promise<void> {
+export async function updateHomePageContent(
+  pageName: string, 
+  content: Omit<HomePageContent, 'heroImageUrls'>, 
+  imageSlots: BannerImageSlot[]
+): Promise<void> {
   try {
-    const contentToSave: Partial<HomePageContent> & { heroImageUrls: string[] } = {
-        ...content,
-        heroImageUrls: content.heroImageUrls || []
-    };
+    const newImageUrls: string[] = [];
 
-    if (bannerImages.length > 0) {
-      const uploadPromises = bannerImages.map(file => 
-        uploadFile(file, `pages/${pageName}/banner_${Date.now()}_${file.name}`)
-      );
-      const newImageUrls = await Promise.all(uploadPromises);
-      contentToSave.heroImageUrls.push(...newImageUrls);
+    for (const slot of imageSlots) {
+        if (slot.type === 'file' && slot.value instanceof File) {
+            const uploadedUrl = await uploadFile(slot.value, `pages/${pageName}/banner_${Date.now()}_${slot.value.name}`);
+            newImageUrls.push(uploadedUrl);
+        } else if (slot.type === 'url' && typeof slot.value === 'string' && slot.value.trim() !== '') {
+            newImageUrls.push(slot.value);
+        }
     }
+    
+    const contentToSave = {
+        ...content,
+        heroImageUrls: newImageUrls
+    };
     
     const docRef = doc(db, pagesCollection, pageName);
     await setDoc(docRef, {
@@ -63,6 +76,7 @@ export async function updateHomePageContent(pageName: string, content: HomePageC
     throw new Error('Failed to update page content.');
   }
 }
+
 
 /**
  * Updates or creates the content for a specific page in Firestore.

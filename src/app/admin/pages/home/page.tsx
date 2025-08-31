@@ -10,18 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { getPageContent, updateHomePageContent } from "@/lib/page-content-service";
 import type { HomePageContent } from "@/lib/page-content-types";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Upload, Link2 } from "lucide-react";
 
 const PAGE_ID = 'home';
+const MAX_IMAGES = 6;
 
 const initialContent: HomePageContent = {
   heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrls: [],
   whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
 };
 
+type BannerImageSlot = {
+  type: 'url' | 'file' | 'empty';
+  value: string | File | null;
+  preview: string | null;
+};
+
 export default function EditHomePage() {
-  const [content, setContent] = useState<HomePageContent | null>(null);
-  const [bannerImageFiles, setBannerImageFiles] = useState<File[]>([]);
+  const [content, setContent] = useState<Omit<HomePageContent, 'heroImageUrls'> | null>(null);
+  const [imageSlots, setImageSlots] = useState<BannerImageSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -31,11 +38,25 @@ export default function EditHomePage() {
       setIsLoading(true);
       try {
         const pageContent = await getPageContent<HomePageContent>(PAGE_ID);
-        setContent(pageContent || initialContent);
+        const loadedContent = pageContent || initialContent;
+        
+        const { heroImageUrls, ...textContent } = loadedContent;
+        setContent(textContent);
+
+        const slots: BannerImageSlot[] = Array(MAX_IMAGES).fill(null).map((_, i) => {
+          const url = heroImageUrls[i];
+          if (url) {
+            return { type: 'url', value: url, preview: url };
+          }
+          return { type: 'empty', value: null, preview: null };
+        });
+        setImageSlots(slots);
+
       } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
         setContent(initialContent);
+        setImageSlots(Array(MAX_IMAGES).fill({ type: 'empty', value: null, preview: null }));
       } finally {
         setIsLoading(false);
       }
@@ -48,12 +69,26 @@ export default function EditHomePage() {
     setContent(prev => prev ? { ...prev, [id]: value } : null);
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setBannerImageFiles(Array.from(e.target.files));
-    } else {
-      setBannerImageFiles([]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const newSlots = [...imageSlots];
+      newSlots[index] = { type: 'file', value: file, preview: URL.createObjectURL(file) };
+      setImageSlots(newSlots);
     }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+      const url = e.target.value;
+      const newSlots = [...imageSlots];
+      newSlots[index] = { type: 'url', value: url, preview: url };
+      setImageSlots(newSlots);
+  }
+
+  const handleRemoveImage = (index: number) => {
+    const newSlots = [...imageSlots];
+    newSlots[index] = { type: 'empty', value: null, preview: null };
+    setImageSlots(newSlots);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,11 +96,11 @@ export default function EditHomePage() {
     if (!content) return;
     setIsSaving(true);
     try {
-      await updateHomePageContent(PAGE_ID, content, bannerImageFiles);
+      await updateHomePageContent(PAGE_ID, content, imageSlots);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
-       if (bannerImageFiles.length > 0) {
-        // Refresh the page to show the new image if one was uploaded
-         window.location.reload();
+      // Optional: reload to see changes immediately if uploads happened
+      if (imageSlots.some(slot => slot.type === 'file')) {
+          window.location.reload();
       }
     } catch (error) {
       console.error("Failed to save page content", error);
@@ -74,17 +109,6 @@ export default function EditHomePage() {
       setIsSaving(false);
     }
   };
-
-  const handleRemoveImage = (urlToRemove: string) => {
-    setContent(prev => {
-        if (!prev) return null;
-        return {
-            ...prev,
-            heroImageUrls: prev.heroImageUrls.filter(url => url !== urlToRemove)
-        }
-    })
-  }
-
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -117,38 +141,55 @@ export default function EditHomePage() {
                   <Label htmlFor="heroButtonText">Texto del Botón</Label>
                   <Input id="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="heroBanner">Imágenes de Banner</Label>
-                  <Input id="heroBanner" type="file" accept="image/*" onChange={handleFileChange} className="cursor-pointer" multiple />
-                   {content.heroImageUrls && content.heroImageUrls.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Imágenes actuales (haz clic en la 'x' para eliminar una imagen y luego guarda los cambios):</p>
-                      <div className="flex flex-wrap gap-4">
-                        {content.heroImageUrls.map((url) => (
-                          <div key={url} className="relative group">
-                            <Image src={url} alt="Banner actual" width={150} height={100} className="rounded-md object-cover" />
-                             <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleRemoveImage(url)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                          </div>
+                 <div className="grid gap-4">
+                    <Label>Imágenes de Banner del Carrusel (hasta 6)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {imageSlots.map((slot, index) => (
+                            <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                                <Label className="text-sm font-medium">Imagen {index + 1}</Label>
+                                <div className="relative w-full aspect-video rounded-md bg-muted overflow-hidden flex items-center justify-center">
+                                    {slot.preview ? (
+                                        <>
+                                            <Image src={slot.preview} alt={`Vista previa ${index + 1}`} fill className="object-cover" />
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute top-1 right-1 h-6 w-6"
+                                                onClick={() => handleRemoveImage(index)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground">Sin imagen</span>
+                                    )}
+                                </div>
+                                <div className="grid gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Link2 className="h-4 w-4 text-muted-foreground"/>
+                                        <Input 
+                                            type="text" 
+                                            placeholder="O pega una URL aquí" 
+                                            className="text-xs h-8"
+                                            value={slot.type === 'url' ? slot.value as string : ''}
+                                            onChange={(e) => handleUrlChange(e, index)}
+                                        />
+                                    </div>
+                                    <div className="relative flex items-center justify-center">
+                                        <span className="text-xs text-muted-foreground px-2 bg-background z-10">o</span>
+                                        <div className="absolute top-1/2 left-0 w-full h-px bg-border"></div>
+                                    </div>
+                                    <Button type="button" variant="outline" size="sm" asChild>
+                                        <label className="cursor-pointer w-full">
+                                            <Upload className="mr-2 h-4 w-4"/> Subir archivo
+                                            <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileChange(e, index)} />
+                                        </label>
+                                    </Button>
+                                </div>
+                            </div>
                         ))}
-                      </div>
                     </div>
-                  )}
-                  {bannerImageFiles.length > 0 && (
-                     <p className="text-sm text-muted-foreground mt-2">
-                        Nuevas imágenes seleccionadas: {bannerImageFiles.map(f => f.name).join(', ')}
-                     </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Puedes seleccionar varias imágenes. Se mostrarán en un carrusel.
-                  </p>
                 </div>
               </div>
 
