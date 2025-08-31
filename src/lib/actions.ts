@@ -40,8 +40,11 @@ export async function addProductAction(formData: FormData) {
             finalImageUrl = imageUrl;
         } else if (imageFile && imageFile.size > 0 && imageContentType) {
             finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
-        } else {
-             return { success: false, error: 'Se requiere una imagen del producto (URL o archivo).' };
+        }
+
+        // CRITICAL FIX: Ensure we have a valid image URL before proceeding.
+        if (!finalImageUrl) {
+            return { success: false, error: 'Se requiere una imagen del producto y no se pudo procesar. Verifica el archivo o la URL.' };
         }
 
         let pdfUrl: string | undefined;
