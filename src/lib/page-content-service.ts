@@ -58,10 +58,10 @@ export async function updateHomePageContent(
           );
         }
         // Case 2: An existing URL or a newly pasted URL is present
-        if (slot.type === 'url' && typeof slot.value === 'string') {
+        if (slot.type === 'url' && typeof slot.value === 'string' && slot.value) {
           return slot.value;
         }
-        // Case 3: The slot is empty
+        // Case 3: The slot is empty or invalid
         return null;
       })
     );
