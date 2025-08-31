@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getPageContent, updatePageContent } from '@/lib/page-content-service';
+import { getPageContent } from '@/lib/page-content-service';
+import { updateAboutPageContentAction } from '@/lib/actions';
 import type { AboutPageContent } from '@/lib/page-content-types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -51,7 +52,7 @@ export default function EditAboutPage() {
     if (!content) return;
     setIsSaving(true);
     try {
-      await updatePageContent(PAGE_ID, content);
+      await updateAboutPageContentAction(content);
       toast({ title: "Éxito", description: "Contenido de la página 'Nosotros' guardado." });
     } catch (error) {
       console.error("Failed to save page content", error);

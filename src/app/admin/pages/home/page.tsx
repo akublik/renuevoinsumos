@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getPageContent, updateHomePageContent } from "@/lib/page-content-service";
+import { getPageContent } from "@/lib/page-content-service";
+import { updateHomePageContentAction } from '@/lib/actions';
 import type { HomePageContent } from "@/lib/page-content-types";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X, Upload, Link2 } from "lucide-react";
@@ -20,15 +21,9 @@ const initialContent: HomePageContent = {
   whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
 };
 
-type BannerImageSlot = {
-  type: 'url' | 'file' | 'empty';
-  value: string | File | null;
-  preview: string | null;
-};
-
 export default function EditHomePage() {
   const [content, setContent] = useState<Omit<HomePageContent, 'heroImageUrls'> | null>(null);
-  const [imageSlots, setImageSlots] = useState<BannerImageSlot[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -42,22 +37,13 @@ export default function EditHomePage() {
         
         const { heroImageUrls, ...textContent } = loadedContent;
         setContent(textContent);
-
-        const imageUrls = heroImageUrls || []; // Ensure heroImageUrls is always an array
-        const slots: BannerImageSlot[] = Array(MAX_IMAGES).fill(null).map((_, i) => {
-          const url = imageUrls[i];
-          if (url) {
-            return { type: 'url', value: url, preview: url };
-          }
-          return { type: 'empty', value: null, preview: null };
-        });
-        setImageSlots(slots);
+        setImageUrls(heroImageUrls || []);
 
       } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
         setContent(initialContent);
-        setImageSlots(Array(MAX_IMAGES).fill({ type: 'empty', value: null, preview: null }));
+        setImageUrls([]);
       } finally {
         setIsLoading(false);
       }
@@ -70,42 +56,45 @@ export default function EditHomePage() {
     setContent(prev => prev ? { ...prev, [id]: value } : null);
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const newSlots = [...imageSlots];
-      newSlots[index] = { type: 'file', value: file, preview: URL.createObjectURL(file) };
-      setImageSlots(newSlots);
-    }
-  };
-
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
       const url = e.target.value;
-      const newSlots = [...imageSlots];
-      newSlots[index] = { type: 'url', value: url, preview: url };
-      setImageSlots(newSlots);
+      const newUrls = [...imageUrls];
+      newUrls[index] = url;
+      setImageUrls(newUrls);
   }
 
   const handleRemoveImage = (index: number) => {
-    const newSlots = [...imageSlots];
-    newSlots[index] = { type: 'empty', value: null, preview: null };
-    setImageSlots(newSlots);
+    const newUrls = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newUrls);
   };
+
+  const addImageSlot = () => {
+    if (imageUrls.length < MAX_IMAGES) {
+      setImageUrls([...imageUrls, '']);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content) return;
     setIsSaving(true);
+    
+    const formData = new FormData();
+    // Append text fields
+    Object.entries(content).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    // Append image URLs
+    imageUrls.forEach(url => {
+        if (url) formData.append('heroImageUrls', url);
+    });
+    
     try {
-      await updateHomePageContent(PAGE_ID, content, imageSlots);
+      await updateHomePageContentAction(formData);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
-      // Optional: reload to see changes immediately if uploads happened
-      if (imageSlots.some(slot => slot.type === 'file')) {
-          window.location.reload();
-      }
     } catch (error) {
       console.error("Failed to save page content", error);
-      toast({ title: "Error", description: "No se pudo guardar el contenido.", variant: "destructive" });
+      toast({ title: "Error", description: `No se pudo guardar el contenido: ${error instanceof Error ? error.message : 'Error desconocido'}`, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -132,65 +121,55 @@ export default function EditHomePage() {
                 <h3 className="text-xl font-semibold font-headline">Sección Principal (Hero)</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="heroTitle">Título Principal</Label>
-                  <Input id="heroTitle" value={content.heroTitle} onChange={handleChange} />
+                  <Input id="heroTitle" name="heroTitle" value={content.heroTitle} onChange={handleChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="heroSubtitle">Subtítulo</Label>
-                  <Textarea id="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} />
+                  <Textarea id="heroSubtitle" name="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="heroButtonText">Texto del Botón</Label>
-                  <Input id="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
+                  <Input id="heroButtonText" name="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
                 </div>
                  <div className="grid gap-4">
-                    <Label>Imágenes de Banner del Carrusel (hasta 6)</Label>
+                    <Label>Imágenes de Banner del Carrusel (URL)</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {imageSlots.map((slot, index) => (
-                            <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/20">
+                        {imageUrls.map((url, index) => (
+                            <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/20 relative">
                                 <Label className="text-sm font-medium">Imagen {index + 1}</Label>
                                 <div className="relative w-full aspect-video rounded-md bg-muted overflow-hidden flex items-center justify-center">
-                                    {slot.preview ? (
-                                        <>
-                                            <Image src={slot.preview} alt={`Vista previa ${index + 1}`} fill className="object-cover" />
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="icon"
-                                                className="absolute top-1 right-1 h-6 w-6"
-                                                onClick={() => handleRemoveImage(index)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </>
+                                    {url ? (
+                                        <Image src={url} alt={`Vista previa ${index + 1}`} fill className="object-cover" />
                                     ) : (
-                                        <span className="text-xs text-muted-foreground">Sin imagen</span>
+                                        <span className="text-xs text-muted-foreground">URL vacía</span>
                                     )}
                                 </div>
-                                <div className="grid gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <Link2 className="h-4 w-4 text-muted-foreground"/>
-                                        <Input 
-                                            type="text" 
-                                            placeholder="O pega una URL aquí" 
-                                            className="text-xs h-8"
-                                            value={slot.type === 'url' ? slot.value as string : ''}
-                                            onChange={(e) => handleUrlChange(e, index)}
-                                        />
-                                    </div>
-                                    <div className="relative flex items-center justify-center">
-                                        <span className="text-xs text-muted-foreground px-2 bg-background z-10">o</span>
-                                        <div className="absolute top-1/2 left-0 w-full h-px bg-border"></div>
-                                    </div>
-                                    <Button type="button" variant="outline" size="sm" asChild>
-                                        <label className="cursor-pointer w-full">
-                                            <Upload className="mr-2 h-4 w-4"/> Subir archivo
-                                            <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileChange(e, index)} />
-                                        </label>
-                                    </Button>
+                                <div className="flex items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-muted-foreground"/>
+                                    <Input 
+                                        type="text" 
+                                        placeholder="Pega una URL de imagen aquí" 
+                                        className="text-xs h-8"
+                                        value={url}
+                                        onChange={(e) => handleUrlChange(e, index)}
+                                        name={`heroImageUrl_${index}`}
+                                    />
                                 </div>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-1 right-1 h-6 w-6"
+                                    onClick={() => handleRemoveImage(index)}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
                             </div>
                         ))}
                     </div>
+                     {imageUrls.length < MAX_IMAGES && (
+                        <Button type="button" variant="outline" size="sm" onClick={addImageSlot}>Añadir Imagen</Button>
+                     )}
                 </div>
               </div>
 
@@ -199,18 +178,18 @@ export default function EditHomePage() {
                 <h3 className="text-xl font-semibold font-headline">Sección "Por qué elegirnos"</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="whyTitle">Título de la Sección</Label>
-                  <Input id="whyTitle" value={content.whyTitle} onChange={handleChange} />
+                  <Input id="whyTitle" name="whyTitle" value={content.whyTitle} onChange={handleChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="whyDescription">Descripción</Label>
-                  <Textarea id="whyDescription" value={content.whyDescription} onChange={handleChange} />
+                  <Textarea id="whyDescription" name="whyDescription" value={content.whyDescription} onChange={handleChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label>Puntos Clave</Label>
                   <div className="grid gap-4">
-                    <Input id="whyPoint1" placeholder="Punto clave 1" value={content.whyPoint1} onChange={handleChange} />
-                    <Input id="whyPoint2" placeholder="Punto clave 2" value={content.whyPoint2} onChange={handleChange} />
-                    <Input id="whyPoint3" placeholder="Punto clave 3" value={content.whyPoint3} onChange={handleChange} />
+                    <Input id="whyPoint1" name="whyPoint1" placeholder="Punto clave 1" value={content.whyPoint1} onChange={handleChange} />
+                    <Input id="whyPoint2" name="whyPoint2" placeholder="Punto clave 2" value={content.whyPoint2} onChange={handleChange} />
+                    <Input id="whyPoint3" name="whyPoint3" placeholder="Punto clave 3" value={content.whyPoint3} onChange={handleChange} />
                   </div>
                 </div>
               </div>

@@ -1,72 +1,7 @@
-import { db, storage, auth } from './firebase';
-import { collection, addDoc, writeBatch, getDocs, serverTimestamp, connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebase';
+import { collection, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { products as localProducts, type Product } from './products';
 import Papa from 'papaparse';
-
-// Define a type for the data being added, excluding fields that will be generated.
-type AddProductData = Omit<Product, 'id' | 'imageUrl' | 'images' | 'technicalSheetUrl' | 'createdAt'>;
-
-// Function to upload a file and return its URL
-const uploadFile = async (file: File, path: string): Promise<string> => {
-    const fileRef = ref(storage, path);
-    const snapshot = await uploadBytes(fileRef, file);
-    return getDownloadURL(snapshot.ref);
-};
-
-export async function addProduct(
-    productData: AddProductData,
-    imageSource: File | string, // Can be a file or a URL string
-    pdfFile: File | null
-): Promise<string | null> {
-    try {
-        let imageUrl: string;
-
-        if (typeof imageSource === 'string') {
-            // Use the provided URL directly
-            imageUrl = imageSource;
-        } else {
-            // Upload the file and get the URL
-            imageUrl = await uploadFile(imageSource, `products/${Date.now()}_${imageSource.name}`);
-        }
-
-        let pdfUrl: string | undefined = undefined;
-        if (pdfFile) {
-            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
-        }
-
-        // Create the full product object first
-        const productToSave: any = {
-            ...productData,
-            price: parseFloat(productData.price as any),
-            stock: parseInt(productData.stock as any, 10),
-            imageUrl,
-            images: [imageUrl],
-            technicalSheetUrl: pdfUrl,
-            createdAt: serverTimestamp(),
-        };
-
-        // Firestore does not accept 'undefined' values.
-        // Now, safely remove optional fields if they are empty or undefined.
-        if (!productToSave.color) {
-            delete productToSave.color;
-        }
-        if (!productToSave.size) {
-            delete productToSave.size;
-        }
-        if (!productToSave.technicalSheetUrl) {
-            delete productToSave.technicalSheetUrl;
-        }
-
-
-        const docRef = await addDoc(collection(db, 'products'), productToSave);
-        return docRef.id;
-
-    } catch (error) {
-        console.error("Error adding product: ", error);
-        return null;
-    }
-}
 
 /**
  * Fetches products. This function now consistently returns local mock data

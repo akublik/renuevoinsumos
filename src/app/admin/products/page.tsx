@@ -8,112 +8,77 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Files, Download, Loader2, Link2 } from 'lucide-react';
-import { addProduct, addProductsFromCSV } from '@/lib/product-service';
+import { addProductAction } from '@/lib/actions';
+import { addProductsFromCSV } from '@/lib/product-service';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/products';
 
 export default function AdminProductsPage() {
-  const [name, setName] = useState('');
-  const [brand, setBrand] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<Product['category'] | ''>('');
-  const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('');
-  const [color, setColor] = useState('');
-  const [size, setSize] = useState('');
-  
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState('');
-
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const resetForm = () => {
-    setName('');
-    setBrand('');
-    setDescription('');
-    setCategory('');
-    setPrice('');
-    setStock('');
-    setColor('');
-    setSize('');
-    setImageFile(null);
-    setImageUrl('');
-    setPdfFile(null);
-    // Reset file input fields visually
-    const fileInputs = document.querySelectorAll('input[type="file"]');
-    fileInputs.forEach(input => (input as HTMLInputElement).value = '');
+  // Function to reset the form via its native API
+  const resetForm = (form: HTMLFormElement) => {
+    form.reset();
+    // Manually clear any state that isn't part of the form's native state
+    const categorySelect = form.querySelector('[role="combobox"]');
+    if (categorySelect) {
+      const trigger = categorySelect as HTMLElement;
+      // This is a bit of a hack to reset the visual of the ShadCN select
+      const valueElement = trigger.querySelector('.text-sm');
+      if (valueElement) {
+        valueElement.innerHTML = 'Selecciona una categoría';
+      }
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name || !price || !stock || !category || (!imageFile && !imageUrl)) {
-      toast({
-        title: 'Error de validación',
-        description: 'Por favor, completa todos los campos obligatorios y proporciona una imagen (subida o por URL).',
-        variant: 'destructive',
-      });
-      return;
-    }
     setIsSubmitting(true);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // Basic client-side validation
+    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category') || (!formData.get('imageFile') && !formData.get('imageUrl'))) {
+        toast({
+            title: 'Error de validación',
+            description: 'Por favor, completa todos los campos obligatorios y proporciona una imagen.',
+            variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+    }
 
     try {
-      const productData = {
-        name,
-        brand,
-        description,
-        category,
-        price: parseFloat(price),
-        stock: parseInt(stock, 10),
-        color: color || undefined,
-        size: size || undefined,
-      };
-      
-      const imageSource = imageFile || imageUrl;
-      const docId = await addProduct(productData, imageSource, pdfFile);
-
-      if (docId) {
-        toast({
-          title: '¡Producto Guardado!',
-          description: `El producto "${name}" se ha agregado correctamente.`,
-        });
-        resetForm();
-      } else {
-         throw new Error("La función addProduct no retornó un ID de documento.");
-      }
-
+        const result = await addProductAction(formData);
+        if (result.success && result.productName) {
+            toast({
+                title: '¡Producto Guardado!',
+                description: `El producto "${result.productName}" se ha agregado correctamente.`,
+            });
+            resetForm(form);
+        } else {
+            throw new Error(result.error || "La acción de servidor no retornó un ID de documento.");
+        }
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      toast({
-        title: 'Error al guardar',
-        description: `Hubo un problema al guardar el producto: ${error instanceof Error ? error.message : 'Error desconocido'}`,
-        variant: 'destructive',
-      });
+        console.error('Error in handleSubmit:', error);
+        toast({
+            title: 'Error al guardar',
+            description: `Hubo un problema al guardar el producto: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+            variant: 'destructive',
+        });
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
-      if (setFile === setImageFile) {
-        setImageUrl(''); // Clear URL if a file is selected
-      }
     } else {
       setFile(null);
-    }
-  };
-
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setImageUrl(e.target.value);
-    if (e.target.value) {
-      setImageFile(null); // Clear file if a URL is entered
     }
   };
 
@@ -211,21 +176,21 @@ export default function AdminProductsPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nombre del Producto</Label>
-                <Input id="name" placeholder="Ej: Guantes de Nitrilo" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input id="name" name="name" placeholder="Ej: Guantes de Nitrilo" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="brand">Marca</Label>
-                <Input id="brand" placeholder="Ej: MedSafe" value={brand} onChange={(e) => setBrand(e.target.value)} />
+                <Input id="brand" name="brand" placeholder="Ej: MedSafe" />
               </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Descripción</Label>
-              <Textarea id="description" placeholder="Describe el producto, sus características y usos." value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Textarea id="description" name="description" placeholder="Describe el producto, sus características y usos." />
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="category">Categoría</Label>
-                <Select onValueChange={(value: Product['category']) => setCategory(value)} value={category} required>
+                <Select name="category" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
@@ -239,21 +204,21 @@ export default function AdminProductsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Precio</Label>
-                <Input id="price" type="number" placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} required />
+                <Input id="price" name="price" type="number" placeholder="0.00" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="stock">Stock</Label>
-                <Input id="stock" type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} required />
+                <Input id="stock" name="stock" type="number" placeholder="0" required />
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="color">Color (Opcional)</Label>
-                <Input id="color" placeholder="Ej: Azul" value={color} onChange={(e) => setColor(e.target.value)} />
+                <Input id="color" name="color" placeholder="Ej: Azul" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="size">Talla (Opcional)</Label>
-                <Input id="size" placeholder="Ej: M" value={size} onChange={(e) => setSize(e.target.value)} />
+                <Input id="size" name="size" placeholder="Ej: M" />
               </div>
             </div>
             
@@ -263,9 +228,8 @@ export default function AdminProductsPage() {
                     <Link2 className="h-4 w-4 text-muted-foreground"/>
                     <Input 
                         type="text" 
+                        name="imageUrl"
                         placeholder="Pega una URL de imagen aquí" 
-                        value={imageUrl}
-                        onChange={handleImageUrlChange}
                         disabled={isSubmitting}
                     />
                 </div>
@@ -275,21 +239,19 @@ export default function AdminProductsPage() {
                 </div>
                 <Input 
                     type="file" 
+                    name="imageFile"
                     accept="image/*" 
-                    onChange={(e) => handleFileChange(e, setImageFile)} 
                     className="cursor-pointer" 
                     disabled={isSubmitting}
                 />
-                {imageFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {imageFile.name}</p>}
             </div>
 
             <div className="grid gap-2">
               <Label>Ficha Técnica (PDF, Opcional)</Label>
-              <Input type="file" accept=".pdf" onChange={(e) => handleFileChange(e, setPdfFile)} className="cursor-pointer" />
-              {pdfFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {pdfFile.name}</p>}
+              <Input type="file" name="pdfFile" accept=".pdf" className="cursor-pointer" />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={resetForm} disabled={isSubmitting}>Cancelar</Button>
+              <Button variant="outline" type="button" onClick={(e) => resetForm(e.currentTarget.form!)} disabled={isSubmitting}>Cancelar</Button>
               <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Guardar Producto
