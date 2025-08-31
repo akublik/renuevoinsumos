@@ -1,6 +1,8 @@
+
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
@@ -55,8 +57,8 @@ export default function CartDrawer() {
                   <span>Subtotal</span>
                   <span>${getCartTotal()}</span>
                 </div>
-                <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                  Finalizar Compra
+                <Button asChild size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setIsCartOpen(false)}>
+                  <Link href="/checkout">Finalizar Compra</Link>
                 </Button>
               </div>
             </SheetFooter>
