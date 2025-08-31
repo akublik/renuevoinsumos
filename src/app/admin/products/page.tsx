@@ -1,16 +1,21 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Download, Loader2, Link2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from '@/components/ui/badge';
+import { Upload, Download, Loader2, Link2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { addProductAction, addProductsFromCSVAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import { getProductsFromFirestore } from '@/lib/product-service';
+import type { Product } from '@/lib/products';
 
 export default function AdminProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,6 +24,28 @@ export default function AdminProductsPage() {
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const fetchedProducts = await getProductsFromFirestore();
+      setProducts(fetchedProducts);
+    } catch (error) {
+      toast({
+        title: 'Error al cargar productos',
+        description: 'No se pudieron obtener los productos de la base de datos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
 
   // Function to reset the form via its native API
@@ -34,7 +61,6 @@ export default function AdminProductsPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     
-    // Append the correct image data based on user input
     if (imageFile) {
         formData.append('imageFile', imageFile);
         formData.append('imageContentType', imageFile.type); 
@@ -42,17 +68,6 @@ export default function AdminProductsPage() {
         formData.append('imageUrl', imageUrl);
     }
     
-    // Basic client-side validation for other required fields
-    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category')) {
-        toast({
-            title: 'Error de validación',
-            description: 'Por favor, completa todos los campos obligatorios.',
-            variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-    }
-
     try {
         const result = await addProductAction(formData);
         if (result.success && result.productName) {
@@ -61,8 +76,9 @@ export default function AdminProductsPage() {
                 description: `El producto "${result.productName}" se ha agregado correctamente.`,
             });
             resetForm(form);
+            fetchProducts(); // Refresh the product list
         } else {
-            throw new Error(result.error || "La acción de servidor no retornó un ID de documento.");
+            throw new Error(result.error || "La acción de servidor falló.");
         }
     } catch (error) {
         console.error('Error in handleSubmit:', error);
@@ -117,6 +133,7 @@ export default function AdminProductsPage() {
                 title: 'Importación CSV completada',
                 description: `${result.successCount} productos importados. ${result.errorCount} errores.`,
             });
+            fetchProducts(); // Refresh the list
         } else {
             throw new Error(result.error || "Ocurrió un error en la importación.");
         }
@@ -153,39 +170,81 @@ export default function AdminProductsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline">Carga Masiva con CSV</CardTitle>
-          <CardDescription>
-            Sube un archivo CSV para agregar múltiples productos al catálogo de una sola vez.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label>Archivo CSV</Label>
-              <Input 
-                type="file" 
-                accept=".csv" 
-                onChange={handleCsvFileChange} 
-                className="cursor-pointer"
-              />
-              {csvFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {csvFile.name}</p>}
-            </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <Button onClick={handleCsvImport} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" disabled={isUploadingCsv || !csvFile}>
-                {isUploadingCsv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Importar Productos
-              </Button>
-              <Button onClick={downloadCsvTemplate} type="button" variant="link" className="w-full sm:w-auto">
-                <Download className="mr-2 h-4 w-4" />
-                Descargar plantilla CSV
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
+      <Card>
+          <CardHeader>
+              <CardTitle className="text-2xl font-headline">Lista de Productos Actuales</CardTitle>
+              <CardDescription>
+                  Aquí puedes ver y gestionar todos los productos de tu catálogo.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead className="hidden w-[100px] sm:table-cell">
+                              <span className="sr-only">Imagen</span>
+                          </TableHead>
+                          <TableHead>Nombre</TableHead>
+                          <TableHead>Categoría</TableHead>
+                          <TableHead className="hidden md:table-cell">Precio</TableHead>
+                          <TableHead className="hidden md:table-cell">Stock</TableHead>
+                          <TableHead>
+                              <span className="sr-only">Acciones</span>
+                          </TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {isLoadingProducts ? (
+                          <TableRow>
+                              <TableCell colSpan={6} className="text-center">
+                                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                              </TableCell>
+                          </TableRow>
+                      ) : products.length > 0 ? (
+                          products.map((product) => (
+                              <TableRow key={product.id}>
+                                  <TableCell className="hidden sm:table-cell">
+                                      <Image
+                                          alt={product.name}
+                                          className="aspect-square rounded-md object-cover"
+                                          height="64"
+                                          src={product.imageUrl}
+                                          width="64"
+                                      />
+                                  </TableCell>
+                                  <TableCell className="font-medium">{product.name}</TableCell>
+                                  <TableCell>
+                                      <Badge variant="outline">{product.category}</Badge>
+                                  </TableCell>
+                                  <TableCell className="hidden md:table-cell">${product.price.toFixed(2)}</TableCell>
+                                  <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
+                                  <TableCell>
+                                      <div className="flex justify-end gap-2">
+                                          <Button variant="outline" size="icon">
+                                              <Pencil className="h-4 w-4" />
+                                              <span className="sr-only">Editar</span>
+                                          </Button>
+                                          <Button variant="destructive" size="icon">
+                                              <Trash2 className="h-4 w-4" />
+                                               <span className="sr-only">Eliminar</span>
+                                          </Button>
+                                      </div>
+                                  </TableCell>
+                              </TableRow>
+                          ))
+                      ) : (
+                          <TableRow>
+                              <TableCell colSpan={6} className="text-center">
+                                  No se encontraron productos.
+                              </TableCell>
+                          </TableRow>
+                      )}
+                  </TableBody>
+              </Table>
+          </CardContent>
+      </Card>
+      
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Agregar Nuevo Producto</CardTitle>
@@ -285,6 +344,40 @@ export default function AdminProductsPage() {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-headline">Carga Masiva con CSV</CardTitle>
+          <CardDescription>
+            Sube un archivo CSV para agregar múltiples productos al catálogo de una sola vez.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Archivo CSV</Label>
+              <Input 
+                type="file" 
+                accept=".csv" 
+                onChange={handleCsvFileChange} 
+                className="cursor-pointer"
+              />
+              {csvFile && <p className="text-sm text-muted-foreground">Archivo seleccionado: {csvFile.name}</p>}
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <Button onClick={handleCsvImport} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" disabled={isUploadingCsv || !csvFile}>
+                {isUploadingCsv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                Importar Productos
+              </Button>
+              <Button onClick={downloadCsvTemplate} type="button" variant="link" className="w-full sm:w-auto">
+                <Download className="mr-2 h-4 w-4" />
+                Descargar plantilla CSV
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
