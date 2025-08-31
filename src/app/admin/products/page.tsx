@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -33,27 +34,35 @@ export default function AdminProductsPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    // Append the file if it exists, otherwise append the URL
+    // Clear previous image-related data to avoid confusion
+    formData.delete('imageFile');
+    formData.delete('imageUrl');
+
+    // Append the correct image data based on user input
     if (imageFile) {
         formData.append('imageFile', imageFile);
-    } else {
+    } else if (imageUrl) {
         formData.append('imageUrl', imageUrl);
-    }
-
-    // Basic client-side validation
-    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category') || (!imageFile && !imageUrl)) {
+    } else {
         toast({
             title: 'Error de validación',
-            description: 'Por favor, completa todos los campos obligatorios y proporciona una imagen.',
+            description: 'Por favor, proporciona una imagen (sube un archivo o pega una URL).',
             variant: 'destructive',
         });
         setIsSubmitting(false);
         return;
     }
     
-    // Clear image inputs from formData if they are empty, so the server action receives the correct one
-    if(!imageFile) formData.delete('imageFile');
-    if(!imageUrl) formData.delete('imageUrl');
+    // Basic client-side validation for other required fields
+    if (!formData.get('name') || !formData.get('price') || !formData.get('stock') || !formData.get('category')) {
+        toast({
+            title: 'Error de validación',
+            description: 'Por favor, completa todos los campos obligatorios.',
+            variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+    }
 
     try {
         const result = await addProductAction(formData);
@@ -290,5 +299,7 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+    
 
     
