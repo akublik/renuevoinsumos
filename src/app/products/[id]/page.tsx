@@ -105,11 +105,11 @@ function ProductClientComponent({ product }: { product: Product | null }) {
   )
 }
 
-
-// This is now a Server Component
+// Este es el Componente de Servidor. Es asíncrono y carga los datos.
+// No tiene 'use client'.
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = await getProductById(params.id);
 
-  // We fetch data on the server and pass it to the client component.
+  // Pasa los datos cargados al Componente de Cliente para que se renderice.
   return <ProductClientComponent product={product} />
 }
