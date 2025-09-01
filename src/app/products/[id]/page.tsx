@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import Image from 'next/image';
@@ -9,7 +9,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, FileText, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShoppingCart, FileText, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { useToast } from '@/hooks/use-toast';
@@ -106,10 +106,10 @@ function ProductClientComponent({ product }: { product: Product | null }) {
 }
 
 
+// This is now a Server Component
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = await getProductById(params.id);
 
-  // We are now fetching data on the server, so we don't need the loading state.
-  // We pass the fetched product directly to the client component.
+  // We fetch data on the server and pass it to the client component.
   return <ProductClientComponent product={product} />
 }
