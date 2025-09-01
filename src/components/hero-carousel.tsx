@@ -17,7 +17,7 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
 
     if (!images || images.length === 0) {
         return (
-             <div className="absolute inset-0 z-0 bg-muted flex items-center justify-center">
+             <div className="absolute inset-0 z-10 bg-muted flex items-center justify-center">
                 <p className="text-muted-foreground">No hay imágenes para el carrusel.</p>
             </div>
         )
@@ -25,7 +25,7 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
 
     return (
         <Carousel
-            className="absolute inset-0 z-0 w-full h-full"
+            className="w-full h-full absolute inset-0 z-10"
             plugins={[plugin.current]}
             opts={{ loop: true }}
           >
@@ -40,7 +40,7 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
                         priority={index === 0}
                         data-ai-hint="medical physiotherapy"
                     />
-                    <div className="absolute inset-0 bg-black/50 z-10" />
+                    <div className="absolute inset-0 bg-black/50" />
                 </CarouselItem>
               ))}
             </CarouselContent>

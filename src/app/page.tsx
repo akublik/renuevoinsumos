@@ -39,7 +39,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden">
+        <section className="relative w-full h-[60vh] md:h-[70vh] bg-muted">
             <HeroCarousel images={content.heroImageUrls} />
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-4">
                 <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight drop-shadow-lg">
