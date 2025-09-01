@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Insumos Online',
   description: 'Venta de insumos médicos.',
 };
-
+// Forcing a server restart to apply config changes
 export default function RootLayout({
   children,
 }: Readonly<{
