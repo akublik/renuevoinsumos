@@ -29,7 +29,7 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
             plugins={[plugin.current]}
             opts={{ loop: true }}
           >
-            <CarouselContent className="h-full embla-fade">
+            <CarouselContent className="h-full">
               {images.map((url, index) => (
                 <CarouselItem key={index} className="h-full relative">
                     <Image
