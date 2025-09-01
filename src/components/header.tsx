@@ -1,7 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { useState } from "react";
+import Image from "next/image";
 import { HeartPulse, Search, User, ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +41,13 @@ export default function Header() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <HeartPulse className="h-8 w-8 text-accent" />
+            <Image 
+              src="https://firebasestorage.googleapis.com/v0/b/enlaceimagen.firebasestorage.app/o/images%2Ff99575bd-8e4a-4fa3-8c5d-c6068c5c917d.png?alt=media&token=5b671a9d-40e9-492f-879b-5971d19882ff"
+              alt="Insumos Online Logo"
+              width={40}
+              height={40}
+              className="h-10 w-auto"
+            />
             <span className="font-bold text-xl font-headline">Insumos Online</span>
           </Link>
 
@@ -94,7 +102,13 @@ export default function Header() {
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                    <HeartPulse className="h-8 w-8 text-accent" />
+                     <Image 
+                      src="https://firebasestorage.googleapis.com/v0/b/enlaceimagen.firebasestorage.app/o/images%2Ff99575bd-8e4a-4fa3-8c5d-c6068c5c917d.png?alt=media&token=5b671a9d-40e9-492f-879b-5971d19882ff"
+                      alt="Insumos Online Logo"
+                      width={40}
+                      height={40}
+                      className="h-10 w-auto"
+                    />
                     <span className="font-bold text-xl font-headline">Insumos Online</span>
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
