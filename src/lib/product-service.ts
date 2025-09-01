@@ -3,15 +3,7 @@
 
 import { db } from './firebase';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, where, QueryConstraint } from 'firebase/firestore';
-import { products as localProducts, type Product } from './products';
-
-/**
- * Fetches products. This function now consistently returns local mock data
- * for the chatbot to prevent permission errors for unauthenticated users.
- */
-export async function getProducts(): Promise<Product[]> {
-  return Promise.resolve(localProducts as Product[]);
-}
+import type { Product } from './products';
 
 /**
  * Fetches a single product by its ID from Firestore.

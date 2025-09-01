@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Send, X, Bot } from 'lucide-react';
 import { salesAssistant } from '@/ai/flows/sales-assistant';
-import { getProducts } from '@/lib/product-service';
+import { getProductsFromFirestore } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import { cn } from '@/lib/utils';
 
@@ -36,8 +36,7 @@ export default function Chatbot() {
     if (isOpen && liveProducts.length === 0) {
       const fetchProducts = async () => {
         try {
-          // getProducts now safely returns local data, preventing permission errors.
-          const productsFromService = await getProducts();
+          const productsFromService = await getProductsFromFirestore();
           if (productsFromService && productsFromService.length > 0) {
             // Map to the AI-friendly format
             const productsForAI = productsFromService.map(
