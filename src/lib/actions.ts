@@ -1,7 +1,7 @@
 
 'use server';
 
-import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
@@ -312,5 +312,24 @@ export async function createOrderAction(orderData: OrderData) {
   } catch (error) {
     console.error('Error creating order:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Failed to create order.' };
+  }
+}
+
+export async function deleteProductAction(productId: string) {
+  if (!productId) {
+    return { success: false, error: "Se requiere el ID del producto." };
+  }
+  try {
+    const docRef = doc(db, 'products', productId);
+    await deleteDoc(docRef);
+
+    revalidatePath('/admin/products');
+    revalidatePath('/products');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar el producto.' };
   }
 }
