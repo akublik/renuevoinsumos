@@ -31,12 +31,12 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
           >
             <CarouselContent className="h-full">
               {images.map((url, index) => (
-                <CarouselItem key={index} className="h-full relative">
+                <CarouselItem key={index} className="relative w-full h-full">
                     <Image
                         src={url}
                         alt={`Banner principal ${index + 1}`}
                         fill
-                        className="object-cover w-full h-full"
+                        className="object-cover"
                         priority={index === 0}
                         data-ai-hint="medical physiotherapy"
                     />
