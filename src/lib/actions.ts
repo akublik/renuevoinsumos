@@ -197,9 +197,32 @@ export async function updateHomePageContentAction(formData: FormData) {
     }
 }
 
-export async function updateAboutPageContentAction(content: AboutPageContent) {
+export async function updateAboutPageContentAction(formData: FormData) {
     const PAGE_ID = 'about';
     try {
+        getStorage();
+        const imageFile = formData.get('imageFile') as File | null;
+        const imageContentType = formData.get('imageContentType') as string | null;
+        let finalImageUrl = formData.get('heroImageUrl') as string;
+
+        if (imageFile && imageFile.size > 0 && imageContentType) {
+            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`, imageContentType);
+        }
+        
+        const content: AboutPageContent = {
+            heroTitle: formData.get('heroTitle') as string,
+            heroSubtitle: formData.get('heroSubtitle') as string,
+            heroImageUrl: finalImageUrl,
+            aboutTitle: formData.get('aboutTitle') as string,
+            aboutDescription: formData.get('aboutDescription') as string,
+            value1Title: formData.get('value1Title') as string,
+            value1Desc: formData.get('value1Desc') as string,
+            value2Title: formData.get('value2Title') as string,
+            value2Desc: formData.get('value2Desc') as string,
+            value3Title: formData.get('value3Title') as string,
+            value3Desc: formData.get('value3Desc') as string,
+        };
+
         const docRef = doc(db, 'pages', PAGE_ID);
         await setDoc(docRef, {
             ...content,

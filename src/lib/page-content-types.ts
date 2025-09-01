@@ -12,6 +12,7 @@ export type HomePageContent = {
 };
 
 export type AboutPageContent = {
+  heroImageUrl: string;
   heroTitle: string;
   heroSubtitle: string;
   aboutTitle: string;

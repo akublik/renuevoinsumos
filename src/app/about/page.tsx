@@ -13,12 +13,23 @@ export default async function AboutPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="bg-primary/10 py-20 md:py-32">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline text-gray-800 mb-4">
+        <section className="relative w-full h-[50vh] bg-muted flex items-center justify-center">
+          {content.heroImageUrl && (
+            <Image
+              src={content.heroImageUrl}
+              alt="Banner de la página Nosotros"
+              fill
+              className="object-cover"
+              priority
+              data-ai-hint="medical technology"
+            />
+          )}
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative z-10 container mx-auto px-4 text-center text-white">
+            <h1 className="text-4xl md:text-6xl font-bold font-headline drop-shadow-lg">
               {content.heroTitle}
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl max-w-3xl mx-auto mt-4 drop-shadow-md">
               {content.heroSubtitle}
             </p>
           </div>
