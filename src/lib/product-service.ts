@@ -1,7 +1,8 @@
+
 'use server';
 
 import { db } from './firebase';
-import { collection, getDocs, query, orderBy, limit, doc, getDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, doc, getDoc, where, QueryConstraint } from 'firebase/firestore';
 import { products as localProducts, type Product } from './products';
 
 /**
@@ -65,11 +66,13 @@ export async function getProductsFromFirestore(options: { productLimit?: number,
     const { productLimit, featuredOnly } = options;
     const productsRef = collection(db, 'products');
     
-    let queryConstraints = [orderBy('createdAt', 'desc')];
+    const queryConstraints: QueryConstraint[] = [];
 
     if (featuredOnly) {
-      queryConstraints.unshift(where('isFeatured', '==', true));
+      queryConstraints.push(where('isFeatured', '==', true));
     }
+    
+    queryConstraints.push(orderBy('createdAt', 'desc'));
 
     if (productLimit) {
       queryConstraints.push(limit(productLimit));
@@ -106,3 +109,4 @@ export async function getProductsFromFirestore(options: { productLimit?: number,
     return [];
   }
 }
+
