@@ -106,31 +106,10 @@ function ProductClientComponent({ product }: { product: Product | null }) {
 }
 
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function ProductDetailPage({ params }: { params: { id: string } }) {
+  const product = await getProductById(params.id);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      setIsLoading(true);
-      const fetchedProduct = await getProductById(params.id);
-      setProduct(fetchedProduct);
-      setIsLoading(false);
-    };
-    fetchProduct();
-  }, [params.id]);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
+  // We are now fetching data on the server, so we don't need the loading state.
+  // We pass the fetched product directly to the client component.
   return <ProductClientComponent product={product} />
 }
