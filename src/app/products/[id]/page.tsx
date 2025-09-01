@@ -86,13 +86,15 @@ function ProductClientComponent({ productId }: { productId: string }) {
             </Button>
         </div>
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-          <div className="aspect-square relative rounded-lg overflow-hidden border shadow-lg">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover"
-            />
+          <div className="w-full max-w-md mx-auto">
+            <div className="aspect-square relative rounded-lg overflow-hidden border shadow-lg">
+                <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-cover"
+                />
+            </div>
           </div>
           <div>
             <div className="space-y-4">
