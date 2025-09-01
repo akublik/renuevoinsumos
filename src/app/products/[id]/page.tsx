@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import Image from 'next/image';
 import Header from '@/components/header';
@@ -13,6 +12,7 @@ import { ShoppingCart, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { useToast } from '@/hooks/use-toast';
+import { getProductById } from '@/lib/product-service';
 
 // Este es el Componente de Cliente. Es el responsable de la UI interactiva.
 function ProductClientComponent({ productId }: { productId: string }) {
