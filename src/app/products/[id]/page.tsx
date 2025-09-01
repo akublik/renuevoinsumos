@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import Image from 'next/image';
@@ -9,15 +9,28 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, FileText, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { useToast } from '@/hooks/use-toast';
 
-function ProductClientComponent({ product }: { product: Product | null }) {
+// Este es el Componente de Cliente. Es el responsable de la UI interactiva.
+function ProductClientComponent({ productId }: { productId: string }) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { addToCart } = useCart();
   const { toast } = useToast();
-  
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      const fetchedProduct = await getProductById(productId);
+      setProduct(fetchedProduct);
+      setIsLoading(false);
+    };
+    fetchProduct();
+  }, [productId]);
+
   const handleAddToCart = () => {
     if (product) {
       addToCart(product);
@@ -27,7 +40,20 @@ function ProductClientComponent({ product }: { product: Product | null }) {
       });
     }
   };
-  
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="ml-2">Cargando producto...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!product) {
     return (
      <div className="flex flex-col min-h-screen">
@@ -105,11 +131,9 @@ function ProductClientComponent({ product }: { product: Product | null }) {
   )
 }
 
-// Este es el Componente de Servidor. Es asíncrono y carga los datos.
-// No tiene 'use client'.
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-  const product = await getProductById(params.id);
-
-  // Pasa los datos cargados al Componente de Cliente para que se renderice.
-  return <ProductClientComponent product={product} />
+// Este es el componente de página que Next.js renderiza.
+// No tiene 'use client' y puede acceder a los params directamente.
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
+  // Pasa el ID al componente de cliente para que se encargue de la carga de datos y la renderización.
+  return <ProductClientComponent productId={params.id} />
 }
