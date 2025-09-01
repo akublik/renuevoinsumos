@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const productId = params.id;
+  const params = useParams();
+  const productId = params.id as string;
 
   useEffect(() => {
     if (!productId) return;
