@@ -31,8 +31,7 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
           >
             <CarouselContent className="h-full embla-fade">
               {images.map((url, index) => (
-                <CarouselItem key={index} className="h-full">
-                  <div className="relative w-full h-full">
+                <CarouselItem key={index} className="h-full relative">
                     <Image
                         src={url}
                         alt={`Banner principal ${index + 1}`}
@@ -42,7 +41,6 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
                         data-ai-hint="medical physiotherapy"
                     />
                     <div className="absolute inset-0 bg-black/50 z-10" />
-                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
