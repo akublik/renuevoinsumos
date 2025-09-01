@@ -169,16 +169,25 @@ export async function updateProductAction(formData: FormData) {
 export async function updateHomePageContentAction(formData: FormData) {
     const PAGE_ID = 'home';
     try {
+        getStorage();
+        const imageFile = formData.get('imageFile') as File | null;
+        const imageContentType = formData.get('imageContentType') as string | null;
+        let finalImageUrl = formData.get('heroImageUrl') as string;
+
+        if (imageFile && imageFile.size > 0 && imageContentType) {
+            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`, imageContentType);
+        }
+
         const content: HomePageContent = {
             heroTitle: formData.get('heroTitle') as string,
             heroSubtitle: formData.get('heroSubtitle') as string,
             heroButtonText: formData.get('heroButtonText') as string,
+            heroImageUrl: finalImageUrl,
             whyTitle: formData.get('whyTitle') as string,
             whyDescription: formData.get('whyDescription') as string,
             whyPoint1: formData.get('whyPoint1') as string,
             whyPoint2: formData.get('whyPoint2') as string,
             whyPoint3: formData.get('whyPoint3') as string,
-            heroImageUrls: formData.getAll('heroImageUrls') as string[],
         };
 
         const docRef = doc(db, 'pages', PAGE_ID);

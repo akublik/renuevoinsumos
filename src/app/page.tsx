@@ -10,7 +10,6 @@ import type { HomePageContent } from '@/lib/page-content-types';
 import { getProductsFromFirestore } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import ProductCard from '@/components/product-card';
-import HeroCarousel from '@/components/hero-carousel';
 
 function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -39,13 +38,23 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="relative w-full h-[60vh] md:h-[70vh] bg-muted">
-            <HeroCarousel images={content.heroImageUrls} />
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-4">
-                <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight drop-shadow-lg">
+        <section className="relative w-full h-[60vh] md:h-[70vh] bg-muted flex items-center justify-center">
+             {content.heroImageUrl && (
+                <Image
+                    src={content.heroImageUrl}
+                    alt="Banner principal"
+                    fill
+                    className="object-cover"
+                    priority
+                    data-ai-hint="medical physiotherapy"
+                />
+             )}
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-center text-center text-white">
+                <h1 className="text-4xl md:text-6xl font-bold font-headline mb-4 leading-tight drop-shadow-lg">
                 {content.heroTitle}
                 </h1>
-                <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8 drop-shadow-md">
+                <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 drop-shadow-md">
                 {content.heroSubtitle}
                 </p>
                 <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">

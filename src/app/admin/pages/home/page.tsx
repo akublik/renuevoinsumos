@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -11,19 +12,19 @@ import { getPageContent } from "@/lib/page-content-service";
 import { updateHomePageContentAction } from '@/lib/actions';
 import type { HomePageContent } from "@/lib/page-content-types";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X, Upload, Link2 } from "lucide-react";
+import { Loader2, Link2 } from "lucide-react";
 
 const PAGE_ID = 'home';
-const MAX_IMAGES = 6;
 
 const initialContent: HomePageContent = {
-  heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrls: [],
+  heroTitle: "", heroSubtitle: "", heroButtonText: "", heroImageUrl: "",
   whyTitle: "", whyDescription: "", whyPoint1: "", whyPoint2: "", whyPoint3: ""
 };
 
 export default function EditHomePage() {
-  const [content, setContent] = useState<Omit<HomePageContent, 'heroImageUrls'> | null>(null);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [content, setContent] = useState<HomePageContent | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -34,16 +35,13 @@ export default function EditHomePage() {
       try {
         const pageContent = await getPageContent<HomePageContent>(PAGE_ID);
         const loadedContent = pageContent || initialContent;
-        
-        const { heroImageUrls, ...textContent } = loadedContent;
-        setContent(textContent);
-        setImageUrls(heroImageUrls || []);
-
+        setContent(loadedContent);
+        setImageUrl(loadedContent.heroImageUrl || '');
       } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
         setContent(initialContent);
-        setImageUrls([]);
+        setImageUrl('');
       } finally {
         setIsLoading(false);
       }
@@ -55,24 +53,19 @@ export default function EditHomePage() {
     const { id, value } = e.target;
     setContent(prev => prev ? { ...prev, [id]: value } : null);
   };
-  
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-      const url = e.target.value;
-      const newUrls = [...imageUrls];
-      newUrls[index] = url;
-      setImageUrls(newUrls);
-  }
 
-  const handleRemoveImage = (index: number) => {
-    const newUrls = imageUrls.filter((_, i) => i !== index);
-    setImageUrls(newUrls);
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+      setImageUrl(URL.createObjectURL(e.target.files[0])); // Show local preview
+    }
   };
 
-  const addImageSlot = () => {
-    if (imageUrls.length < MAX_IMAGES) {
-      setImageUrls([...imageUrls, '']);
-    }
-  }
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(e.target.value);
+    setImageFile(null);
+    setContent(prev => prev ? { ...prev, heroImageUrl: e.target.value } : null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,11 +77,14 @@ export default function EditHomePage() {
     Object.entries(content).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    // Append image URLs
-    imageUrls.forEach(url => {
-        if (url) formData.append('heroImageUrls', url);
-    });
-    
+
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+        formData.append('imageContentType', imageFile.type); 
+    } else {
+        formData.append('heroImageUrl', imageUrl);
+    }
+
     try {
       await updateHomePageContentAction(formData);
       toast({ title: "Éxito", description: "Contenido de la página de inicio guardado." });
@@ -131,45 +127,38 @@ export default function EditHomePage() {
                   <Label htmlFor="heroButtonText">Texto del Botón</Label>
                   <Input id="heroButtonText" name="heroButtonText" value={content.heroButtonText} onChange={handleChange} />
                 </div>
-                 <div className="grid gap-4">
-                    <Label>Imágenes de Banner del Carrusel (URL)</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {imageUrls.map((url, index) => (
-                            <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/20 relative">
-                                <Label className="text-sm font-medium">Imagen {index + 1}</Label>
-                                <div className="relative w-full aspect-video rounded-md bg-muted overflow-hidden flex items-center justify-center">
-                                    {url ? (
-                                        <Image src={url} alt={`Vista previa ${index + 1}`} fill className="object-cover" />
-                                    ) : (
-                                        <span className="text-xs text-muted-foreground">URL vacía</span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Link2 className="h-4 w-4 text-muted-foreground"/>
-                                    <Input 
-                                        type="text" 
-                                        placeholder="Pega una URL de imagen aquí" 
-                                        className="text-xs h-8"
-                                        value={url}
-                                        onChange={(e) => handleUrlChange(e, index)}
-                                        name={`heroImageUrl_${index}`}
-                                    />
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-1 right-1 h-6 w-6"
-                                    onClick={() => handleRemoveImage(index)}
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
+                <div className="grid gap-4">
+                    <Label>Imágen del Banner</Label>
+                    <div className="flex items-center gap-4">
+                        <div className="w-24 h-24 relative border rounded-md overflow-hidden bg-muted">
+                            {imageUrl && <Image src={imageUrl} alt="Vista previa" fill className="object-cover" />}
+                        </div>
+                        <div className="flex-1 grid gap-3">
+                            <div className="flex items-center gap-2">
+                                <Link2 className="h-4 w-4 text-muted-foreground"/>
+                                <Input 
+                                    type="text" 
+                                    name="imageUrlInput"
+                                    placeholder="Pega una URL de imagen aquí" 
+                                    value={imageUrl}
+                                    onChange={handleImageUrlChange}
+                                    disabled={isSaving}
+                                />
                             </div>
-                        ))}
+                            <div className="relative flex items-center justify-center my-2">
+                                <span className="text-xs text-muted-foreground px-2 bg-background z-10">o</span>
+                                <div className="absolute top-1/2 left-0 w-full h-px bg-border"></div>
+                            </div>
+                            <Input 
+                                type="file" 
+                                name="imageFileInput"
+                                accept="image/*" 
+                                onChange={handleImageFileChange}
+                                className="cursor-pointer" 
+                                disabled={isSaving}
+                            />
+                        </div>
                     </div>
-                     {imageUrls.length < MAX_IMAGES && (
-                        <Button type="button" variant="outline" size="sm" onClick={addImageSlot}>Añadir Imagen</Button>
-                     )}
                 </div>
               </div>
 

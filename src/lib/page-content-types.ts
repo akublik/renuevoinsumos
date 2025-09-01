@@ -3,7 +3,7 @@ export type HomePageContent = {
   heroTitle: string;
   heroSubtitle: string;
   heroButtonText: string;
-  heroImageUrls: string[]; // Array of URLs for the hero banner carousel
+  heroImageUrl: string;
   whyTitle: string;
   whyDescription: string;
   whyPoint1: string;
