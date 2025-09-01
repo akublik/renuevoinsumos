@@ -39,20 +39,20 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <section className="relative bg-primary/10 h-[60vh] md:h-[70vh] flex items-center justify-center">
-          <HeroCarousel images={content.heroImageUrls} />
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight">
-              {content.heroTitle}
-            </h1>
-            <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
-              {content.heroSubtitle}
-            </p>
-            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link href="/products">{content.heroButtonText}</Link>
-            </Button>
-          </div>
+        <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden">
+            <HeroCarousel images={content.heroImageUrls} />
+            <div className="absolute inset-0 bg-black/50 z-10" />
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-4">
+                <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight">
+                {content.heroTitle}
+                </h1>
+                <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
+                {content.heroSubtitle}
+                </p>
+                <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href="/products">{content.heroButtonText}</Link>
+                </Button>
+            </div>
         </section>
 
         <section className="py-16 md:py-24">

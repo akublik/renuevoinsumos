@@ -2,17 +2,23 @@
 'use client';
 
 import Image from 'next/image';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { useRef } from 'react';
+import type { CarouselApi } from "@/components/ui/carousel";
 
 interface HeroCarouselProps {
     images: string[];
 }
 
 export default function HeroCarousel({ images }: HeroCarouselProps) {
+    const plugin = useRef(
+        Autoplay({ delay: 5000, stopOnInteraction: true })
+    );
+
     if (!images || images.length === 0) {
         return (
-             <div className="w-full h-full bg-muted flex items-center justify-center">
+             <div className="absolute inset-0 bg-muted flex items-center justify-center">
                 <p className="text-muted-foreground">No images available for carousel.</p>
             </div>
         )
@@ -21,12 +27,12 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
     return (
         <Carousel
             className="w-full h-full"
-            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+            plugins={[plugin.current]}
             opts={{ loop: true }}
           >
-            <CarouselContent className="w-full h-full">
+            <CarouselContent className="w-full h-full embla-fade">
               {images.map((url, index) => (
-                <CarouselItem key={index} className="w-full h-full">
+                <CarouselItem key={index} className="w-full h-full opacity-0">
                   <Image
                     src={url}
                     alt={`Banner principal ${index + 1}`}
@@ -38,8 +44,6 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
-            <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
         </Carousel>
     );
 }
