@@ -19,20 +19,20 @@ export default function HeroCarousel({ images }: HeroCarouselProps) {
     if (!images || images.length === 0) {
         return (
              <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">No images available for carousel.</p>
+                <p className="text-muted-foreground">No hay imágenes para el carrusel.</p>
             </div>
         )
     }
 
     return (
         <Carousel
-            className="w-full h-full"
+            className="absolute inset-0 w-full h-full"
             plugins={[plugin.current]}
             opts={{ loop: true }}
           >
             <CarouselContent className="w-full h-full embla-fade">
               {images.map((url, index) => (
-                <CarouselItem key={index} className="w-full h-full opacity-0">
+                <CarouselItem key={index} className="w-full h-full">
                   <Image
                     src={url}
                     alt={`Banner principal ${index + 1}`}

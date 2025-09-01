@@ -43,10 +43,10 @@ export default async function Home() {
             <HeroCarousel images={content.heroImageUrls} />
             <div className="absolute inset-0 bg-black/50 z-10" />
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-4">
-                <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight">
+                <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight drop-shadow-lg">
                 {content.heroTitle}
                 </h1>
-                <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
+                <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8 drop-shadow-md">
                 {content.heroSubtitle}
                 </p>
                 <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
