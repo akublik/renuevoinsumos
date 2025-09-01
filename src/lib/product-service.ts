@@ -70,9 +70,10 @@ export async function getProductsFromFirestore(options: { productLimit?: number,
 
     if (featuredOnly) {
       queryConstraints.push(where('isFeatured', '==', true));
+       // No ordering is applied here to avoid needing a composite index for this specific query
+    } else {
+      queryConstraints.push(orderBy('createdAt', 'desc'));
     }
-    
-    queryConstraints.push(orderBy('createdAt', 'desc'));
 
     if (productLimit) {
       queryConstraints.push(limit(productLimit));
