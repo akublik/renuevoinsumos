@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,21 +14,9 @@ import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { useToast } from '@/hooks/use-toast';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+function ProductClientComponent({ product }: { product: Product | null }) {
   const { addToCart } = useCart();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      setIsLoading(true);
-      const fetchedProduct = await getProductById(params.id);
-      setProduct(fetchedProduct);
-      setIsLoading(false);
-    };
-    fetchProduct();
-  }, [params.id]);
   
   const handleAddToCart = () => {
     if (product) {
@@ -38,19 +27,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       });
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
+  
   if (!product) {
     return (
      <div className="flex flex-col min-h-screen">
@@ -69,7 +46,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       </div>
     );
   }
-
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -125,5 +102,35 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       </main>
       <Footer />
     </div>
-  );
+  )
+}
+
+
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      const fetchedProduct = await getProductById(params.id);
+      setProduct(fetchedProduct);
+      setIsLoading(false);
+    };
+    fetchProduct();
+  }, [params.id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-accent" />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  return <ProductClientComponent product={product} />
 }
