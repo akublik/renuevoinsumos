@@ -60,6 +60,7 @@ export async function addProductAction(formData: FormData) {
             stock: parseInt(stockString, 10),
             color: formData.get('color') as string || undefined,
             size: formData.get('size') as string || undefined,
+            isFeatured: formData.get('isFeatured') === 'on',
             imageUrl: finalImageUrl,
             images: [finalImageUrl],
             technicalSheetUrl: pdfUrl,
@@ -79,6 +80,7 @@ export async function addProductAction(formData: FormData) {
         
         revalidatePath('/admin/products');
         revalidatePath('/products');
+        revalidatePath('/');
         
         return { success: true, docId: docRef.id, productName };
 
@@ -119,6 +121,7 @@ export async function updateProductAction(formData: FormData) {
             stock: parseInt(stockString, 10),
             color: formData.get('color') as string || undefined,
             size: formData.get('size') as string || undefined,
+            isFeatured: formData.get('isFeatured') === 'on',
             updatedAt: serverTimestamp(),
         };
 
@@ -152,6 +155,7 @@ export async function updateProductAction(formData: FormData) {
         revalidatePath('/admin/products');
         revalidatePath('/products');
         revalidatePath(`/products/${productId}`);
+        revalidatePath('/');
 
         return { success: true, productName };
 

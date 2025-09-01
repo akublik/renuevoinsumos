@@ -45,7 +45,7 @@ export default function Home() {
       try {
         const [pageContent, products] = await Promise.all([
           getPageContent<HomePageContent>('home'),
-          getProductsFromFirestore(4)
+          getProductsFromFirestore({ featuredOnly: true, productLimit: 4 })
         ]);
         setContent(pageContent || defaultContent);
         setFeaturedProducts(products);
@@ -121,11 +121,17 @@ export default function Home() {
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Productos Destacados</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+             {featuredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {featuredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product as Product} />
+                ))}
+                </div>
+             ) : (
+                <div className="text-center text-muted-foreground">
+                    <p>No hay productos destacados en este momento. Vuelve a visitar esta sección más tarde.</p>
+                </div>
+             )}
           </div>
         </section>
 

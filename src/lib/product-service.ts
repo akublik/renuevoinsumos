@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, doc, getDoc, where } from 'firebase/firestore';
 import { products as localProducts, type Product } from './products';
 
 /**
@@ -42,6 +42,7 @@ export async function getProductById(id: string): Promise<Product | null> {
             images: data.images || [],
             color: data.color,
             size: data.size,
+            isFeatured: data.isFeatured || false,
             technicalSheetUrl: data.technicalSheetUrl,
             createdAt: createdAt,
         } as unknown as Product;
@@ -54,24 +55,31 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 
 /**
- * Fetches all products directly from Firestore.
- * Intended for server-side use where permissions are handled securely.
+ * Fetches products from Firestore, with optional filters.
+ * @param {object} [options] - Optional filters.
+ * @param {number} [options.productLimit] - The maximum number of products to return.
+ * @param {boolean} [options.featuredOnly] - Whether to return only featured products.
  */
-export async function getProductsFromFirestore(productLimit?: number): Promise<Product[]> {
+export async function getProductsFromFirestore(options: { productLimit?: number, featuredOnly?: boolean } = {}): Promise<Product[]> {
   try {
+    const { productLimit, featuredOnly } = options;
     const productsRef = collection(db, 'products');
-    let q;
-    if (productLimit) {
-        q = query(productsRef, orderBy('createdAt', 'desc'), limit(productLimit));
-    } else {
-        q = query(productsRef, orderBy('createdAt', 'desc'));
-    }
     
+    let queryConstraints = [orderBy('createdAt', 'desc')];
+
+    if (featuredOnly) {
+      queryConstraints.unshift(where('isFeatured', '==', true));
+    }
+
+    if (productLimit) {
+      queryConstraints.push(limit(productLimit));
+    }
+
+    const q = query(productsRef, ...queryConstraints);
     const querySnapshot = await getDocs(q);
     
     const firestoreProducts = querySnapshot.docs.map(doc => {
       const data = doc.data();
-      // Firestore timestamps need to be converted to serializable format for client components
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
       
       return {
@@ -86,14 +94,15 @@ export async function getProductsFromFirestore(productLimit?: number): Promise<P
         images: data.images || [],
         color: data.color,
         size: data.size,
+        isFeatured: data.isFeatured || false,
         technicalSheetUrl: data.technicalSheetUrl,
         createdAt: createdAt,
-      } as unknown as Product; // Using unknown cast due to timestamp serialization
+      } as unknown as Product;
     });
 
     return firestoreProducts;
   } catch (error) {
     console.error("Error fetching products from Firestore:", error);
-    return []; // Return an empty array on error
+    return [];
   }
 }

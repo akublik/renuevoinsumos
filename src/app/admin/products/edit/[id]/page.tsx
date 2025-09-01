@@ -11,11 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Link2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Link2, Loader2, Star } from 'lucide-react';
 import { updateProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
+import { Switch } from '@/components/ui/switch';
 
 export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -183,6 +184,15 @@ export default function EditProductPage() {
                 <Label htmlFor="size">Talla (Opcional)</Label>
                 <Input id="size" name="size" defaultValue={product.size || ''} />
               </div>
+            </div>
+            <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <Switch id="isFeatured" name="isFeatured" defaultChecked={product.isFeatured} />
+                  <Label htmlFor="isFeatured" className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-400" />
+                    Marcar como producto destacado en la página de inicio
+                  </Label>
+                </div>
             </div>
             
             <div className="grid gap-4">

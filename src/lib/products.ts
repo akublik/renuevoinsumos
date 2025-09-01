@@ -10,6 +10,7 @@ export type Product = {
   stock: number;
   imageUrl: string;
   images: string[];
+  isFeatured?: boolean;
   technicalSheetUrl?: string; // URL for the PDF
   createdAt: Date;
 };
@@ -27,6 +28,7 @@ export const products: Omit<Product, 'createdAt'>[] = [
     stock: 250,
     imageUrl: 'https://picsum.photos/400/400?random=1',
     images: ['https://picsum.photos/600/600?random=1', 'https://picsum.photos/600/600?random=2'],
+    isFeatured: true,
   },
   {
     id: '2',
@@ -38,6 +40,7 @@ export const products: Omit<Product, 'createdAt'>[] = [
     stock: 800,
     imageUrl: 'https://picsum.photos/400/400?random=2',
     images: ['https://picsum.photos/600/600?random=3', 'https://picsum.photos/600/600?random=4'],
+    isFeatured: true,
   },
   {
     id: '3',
@@ -50,6 +53,7 @@ export const products: Omit<Product, 'createdAt'>[] = [
     stock: 50,
     imageUrl: 'https://picsum.photos/400/400?random=3',
     images: ['https://picsum.photos/600/600?random=5', 'https://picsum.photos/600/600?random=6'],
+    isFeatured: true,
   },
   {
     id: '4',
@@ -61,6 +65,7 @@ export const products: Omit<Product, 'createdAt'>[] = [
     stock: 120,
     imageUrl: 'https://picsum.photos/400/400?random=4',
     images: ['https://picsum.photos/600/600?random=7', 'https://picsum.photos/600/600?random=8'],
+    isFeatured: true,
   },
   {
     id: '5',
