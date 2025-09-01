@@ -19,6 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { createOrderAction } from "@/lib/actions";
 import { useAuth } from "@/context/auth-context";
+import type { OrderData } from "@/lib/orders";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -80,7 +81,7 @@ export default function CheckoutPage() {
 
     try {
       const totalAmount = parseFloat(getCartTotal());
-      const orderData = {
+      const orderData: Omit<OrderData, 'status'> = {
         userId: user.uid,
         customer: values,
         items: cartItems.map(item => ({
@@ -90,10 +91,9 @@ export default function CheckoutPage() {
           price: item.price
         })),
         total: totalAmount,
-        status: 'Pendiente' as const,
       };
 
-      const result = await createOrderAction(orderData);
+      const result = await createOrderAction(orderData as OrderData);
       
       if (result.success) {
         toast({

@@ -8,7 +8,7 @@ import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent } from './page-content-types';
 import type { Product } from './products';
 import Papa from 'papaparse';
-import type { OrderData } from './orders';
+import type { OrderData, OrderStatus } from './orders';
 
 
 const uploadFile = async (file: File, path: string, contentType: string): Promise<string> => {
@@ -336,6 +336,7 @@ export async function createOrderAction(orderData: OrderData) {
   try {
     const orderToSave = {
       ...orderData,
+      status: 'Pendiente' as const,
       createdAt: serverTimestamp(),
     };
     const docRef = await addDoc(collection(db, 'orders'), orderToSave);
@@ -363,5 +364,20 @@ export async function deleteProductAction(productId: string) {
   } catch (error) {
     console.error("Error deleting product:", error);
     return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar el producto.' };
+  }
+}
+
+export async function updateOrderStatusAction(orderId: string, status: OrderStatus) {
+  if (!orderId || !status) {
+    return { success: false, error: "Se requiere el ID del pedido y el nuevo estado." };
+  }
+  try {
+    const orderRef = doc(db, 'orders', orderId);
+    await updateDoc(orderRef, { status: status });
+    revalidatePath('/admin/orders');
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'No se pudo actualizar el estado del pedido.' };
   }
 }

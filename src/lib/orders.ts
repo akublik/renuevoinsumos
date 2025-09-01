@@ -1,4 +1,7 @@
 
+
+export type OrderStatus = 'Pendiente' | 'Pagado' | 'Entregado' | 'Cancelado';
+
 export interface OrderItem {
   id: string;
   name: string;
@@ -21,7 +24,7 @@ export interface OrderData {
   customer: CustomerInfo;
   items: OrderItem[];
   total: number;
-  status: 'Pendiente' | 'Enviado' | 'Entregado' | 'Cancelado';
+  status: OrderStatus;
 }
 
 export interface Order extends OrderData {
