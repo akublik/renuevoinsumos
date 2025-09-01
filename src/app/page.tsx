@@ -1,11 +1,7 @@
-'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { getPageContent } from '@/lib/page-content-service';
@@ -14,7 +10,7 @@ import type { HomePageContent } from '@/lib/page-content-types';
 import { getProductsFromFirestore } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import ProductCard from '@/components/product-card';
-import { Skeleton } from '@/components/ui/skeleton';
+import HeroCarousel from '@/components/hero-carousel';
 
 function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -35,75 +31,16 @@ function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function Home() {
-  const [content, setContent] = useState<HomePageContent | null>(null);
-  const [featuredProducts, setFeaturedProducts] = useState<Omit<Product, 'createdAt'>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [pageContent, products] = await Promise.all([
-          getPageContent<HomePageContent>('home'),
-          getProductsFromFirestore({ featuredOnly: true, productLimit: 4 })
-        ]);
-        setContent(pageContent || defaultContent);
-        setFeaturedProducts(products);
-      } catch (error) {
-        console.error("Failed to fetch page data, using defaults.", error);
-        setContent(defaultContent);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (isLoading || !content) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <Skeleton className="h-[70vh] w-full" />
-          <div className="container mx-auto px-4 py-16 md:py-24">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Productos Destacados</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+export default async function Home() {
+  const content = await getPageContent<HomePageContent>('home') || defaultContent;
+  const featuredProducts = await getProductsFromFirestore({ featuredOnly: true, productLimit: 4 });
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
         <section className="relative bg-primary/10 h-[60vh] md:h-[70vh] flex items-center justify-center">
-          <Carousel
-            className="w-full h-full"
-            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
-            opts={{ loop: true }}
-          >
-            <CarouselContent className="w-full h-full">
-              {content.heroImageUrls.map((url, index) => (
-                <CarouselItem key={index} className="w-full h-full">
-                  <Image
-                    src={url}
-                    alt={`Banner principal ${index + 1}`}
-                    fill
-                    className="object-cover w-full h-full"
-                    priority={index === 0}
-                    data-ai-hint="medical physiotherapy"
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
-            <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
-          </Carousel>
+          <HeroCarousel images={content.heroImageUrls} />
           <div className="absolute inset-0 bg-black/50" />
           <div className="container mx-auto px-4 text-center relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold font-headline text-white mb-4 leading-tight">
