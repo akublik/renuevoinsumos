@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -36,7 +37,7 @@ export default function EditAboutPage() {
         const loadedContent = pageContent || initialContent;
         setContent(loadedContent);
         setImageUrl(loadedContent.heroImageUrl || '');
-      } catch (error)
+      } catch (error) {
         console.error("Failed to load page content", error);
         toast({ title: "Error", description: "No se pudo cargar el contenido. Se mostrará un formulario en blanco.", variant: "destructive" });
         setContent(initialContent);
