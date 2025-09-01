@@ -1,7 +1,7 @@
 
 'use server';
 
-import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
@@ -42,9 +42,8 @@ export async function addProductAction(formData: FormData) {
             finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
         }
 
-        // CRITICAL FIX: Ensure we have a valid image URL before proceeding.
         if (!finalImageUrl) {
-            return { success: false, error: 'Se requiere una imagen del producto y no se pudo procesar. Verifica el archivo o la URL.' };
+            return { success: false, error: 'Se requiere una imagen del producto. Proporciona una URL o sube un archivo.' };
         }
 
         let pdfUrl: string | undefined;
@@ -85,6 +84,79 @@ export async function addProductAction(formData: FormData) {
 
     } catch (error) {
         console.error("Error in addProductAction: ", error);
+        return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+}
+
+export async function updateProductAction(formData: FormData) {
+    try {
+        getStorage();
+
+        const productId = formData.get('productId') as string;
+        if (!productId) {
+            return { success: false, error: 'Falta el ID del producto.' };
+        }
+
+        const priceString = formData.get('price') as string | null;
+        const stockString = formData.get('stock') as string | null;
+
+        if (!priceString || !stockString) {
+            return { success: false, error: 'El precio y el stock son obligatorios.' };
+        }
+
+        const imageFile = formData.get('imageFile') as File | null;
+        const imageUrlFromForm = formData.get('imageUrl') as string | null;
+        const imageContentType = formData.get('imageContentType') as string | null;
+        const pdfFile = formData.get('pdfFile') as File | null;
+        const productName = formData.get('name') as string;
+
+        const updateData: { [key: string]: any } = {
+            name: productName,
+            brand: formData.get('brand') as string,
+            description: formData.get('description') as string,
+            category: formData.get('category') as Product['category'],
+            price: parseFloat(priceString),
+            stock: parseInt(stockString, 10),
+            color: formData.get('color') as string || undefined,
+            size: formData.get('size') as string || undefined,
+            updatedAt: serverTimestamp(),
+        };
+
+        let finalImageUrl: string | undefined;
+
+        if (imageFile && imageFile.size > 0 && imageContentType) {
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
+        } else if (imageUrlFromForm) {
+            finalImageUrl = imageUrlFromForm;
+        }
+        
+        if (finalImageUrl) {
+            updateData.imageUrl = finalImageUrl;
+            updateData.images = [finalImageUrl];
+        }
+
+        if (pdfFile && pdfFile.size > 0) {
+            updateData.technicalSheetUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`, 'application/pdf');
+        }
+
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] === undefined || updateData[key] === null || updateData[key] === '') {
+                delete updateData[key];
+            }
+        });
+
+        const docRef = doc(db, 'products', productId);
+        await updateDoc(docRef, updateData);
+
+        revalidatePath(`/admin/products/edit/${productId}`);
+        revalidatePath('/admin/products');
+        revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
+
+        return { success: true, productName };
+
+    } catch (error) {
+        console.error("Error in updateProductAction: ", error);
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 }

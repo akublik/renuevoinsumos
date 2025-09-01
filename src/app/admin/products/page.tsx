@@ -122,7 +122,9 @@ export default function AdminProductsPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Editar</DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/admin/products/edit/${product.id}`}>Editar</Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive">Eliminar</DropdownMenuItem>
                             </DropdownMenuContent>
                          </DropdownMenu>
