@@ -109,4 +109,3 @@ export async function getProductsFromFirestore(options: { productLimit?: number,
     return [];
   }
 }
-
