@@ -63,10 +63,10 @@ export default function AdminCustomersPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nombre</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Fecha de Pedido</TableHead>
-                                <TableHead className="text-right">Monto</TableHead>
-                                <TableHead>Productos Comprados</TableHead>
+                                <TableHead>Contacto</TableHead>
+                                <TableHead className="hidden md:table-cell">Dirección</TableHead>
+                                <TableHead className="hidden lg:table-cell">Fecha de Pedido</TableHead>
+                                <TableHead className="text-right">Monto Total</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -78,17 +78,19 @@ export default function AdminCustomersPage() {
                                 </TableRow>
                             ) : orders.map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium">{order.customer.fullName}</TableCell>
-                                    <TableCell>{order.customer.email}</TableCell>
-                                    <TableCell>{order.createdAt.toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
-                                    <TableCell>
-                                        <ul className="list-disc list-inside text-sm">
-                                            {order.items.map(item => (
-                                                <li key={item.id}>{item.name} (x{item.quantity})</li>
-                                            ))}
-                                        </ul>
+                                    <TableCell className="font-medium">
+                                        <div className="font-bold">{order.customer.fullName}</div>
+                                        {order.customer.ruc && <div className="text-xs text-muted-foreground">RUC/CI: {order.customer.ruc}</div>}
                                     </TableCell>
+                                    <TableCell>
+                                        <div className="text-sm">{order.customer.email}</div>
+                                        <div className="text-sm text-muted-foreground">{order.customer.phone}</div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell text-sm">
+                                        {order.customer.address}, {order.customer.city}
+                                    </TableCell>
+                                    <TableCell className="hidden lg:table-cell text-sm">{order.createdAt.toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right font-semibold">${order.total.toFixed(2)}</TableCell>
                                 </TableRow>
                             ))}
                             {!isLoading && orders.length === 0 && (
