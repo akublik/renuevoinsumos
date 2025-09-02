@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { HeartPulse, Package, Home, FileEdit, ShoppingCart } from 'lucide-react';
+import { HeartPulse, Package, Home, FileEdit, ShoppingCart, BarChart3 } from 'lucide-react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
@@ -47,6 +47,13 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
             <h3 className="font-semibold text-lg mb-2 font-headline">
               Administración
             </h3>
+             <Link
+              href="/admin"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </Link>
             <Link
               href="/admin/products"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
