@@ -232,24 +232,20 @@ export async function updateAboutPageContentAction(formData: FormData) {
 
         // Handle Team Members
         const team: TeamMember[] = [];
-        const teamDataRaw = formData.get('teamData') as string | null;
+        const memberCount = Array.from(formData.keys()).filter(key => key.startsWith('teamName_')).length;
 
-        if (teamDataRaw) {
-            const teamData: Omit<TeamMember, 'imageUrl'>[] = JSON.parse(teamDataRaw);
-            for (let i = 0; i < teamData.length; i++) {
-                const member = teamData[i];
-                const teamImageFile = formData.get(`teamImageFile_${i}`) as File | null;
-                let memberImageUrl = formData.get(`teamImageUrl_${i}`) as string;
+        for (let i = 0; i < memberCount; i++) {
+            const name = formData.get(`teamName_${i}`) as string;
+            const role = formData.get(`teamRole_${i}`) as string;
+            let imageUrl = formData.get(`teamImageUrl_${i}`) as string;
+            const imageFile = formData.get(`teamImageFile_${i}`) as File | null;
 
-                if (teamImageFile && teamImageFile.size > 0) {
-                    memberImageUrl = await uploadFile(teamImageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${teamImageFile.name}`);
-                }
-                
-                team.push({
-                    name: member.name,
-                    role: member.role,
-                    imageUrl: memberImageUrl,
-                });
+            if (imageFile && imageFile.size > 0) {
+                imageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${imageFile.name}`);
+            }
+
+            if (name && role) { // Only add if name and role are present
+                team.push({ name, role, imageUrl });
             }
         }
 

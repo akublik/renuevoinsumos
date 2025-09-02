@@ -76,47 +76,15 @@ export default function EditAboutPage() {
     if (!content) return;
     setIsSaving(true);
     
-    const formData = new FormData();
-    
-    // Append all simple key-value pairs from content
-    Object.entries(content).forEach(([key, value]) => {
-        if (typeof value === 'string') {
-            formData.append(key, value);
-        }
-    });
-
-    // Handle file inputs
-    const imageHeroFile = (document.querySelector('input[name="heroImageFile"]') as HTMLInputElement)?.files?.[0];
-    if (imageHeroFile) {
-        formData.append('heroImageFile', imageHeroFile);
-    }
-    
-    const imageAboutFile = (document.querySelector('input[name="aboutImageFile"]') as HTMLInputElement)?.files?.[0];
-    if (imageAboutFile) {
-        formData.append('aboutImageFile', imageAboutFile);
-    }
-    
-    // Prepare team data
-    const teamDataForJson = (content.team || []).map(member => ({
-        name: member.name || '',
-        role: member.role || '',
-    }));
-    formData.append('teamData', JSON.stringify(teamDataForJson));
-
-    (content.team || []).forEach((member, index) => {
-        // Append existing image URL for the action to use if no new file is uploaded
-        formData.append(`teamImageUrl_${index}`, member.imageUrl || '');
-        
-        const memberImageFile = (document.querySelector(`input[name="teamImageFile_${index}"]`) as HTMLInputElement)?.files?.[0];
-        if (memberImageFile) {
-            formData.append(`teamImageFile_${index}`, memberImageFile);
-        }
-    });
-
+    const formData = new FormData(e.target as HTMLFormElement);
 
     try {
-      await updateAboutPageContentAction(formData);
-      toast({ title: "Éxito", description: "Contenido de la página 'Nosotros' guardado." });
+      const result = await updateAboutPageContentAction(formData);
+      if (result.success) {
+        toast({ title: "Éxito", description: "Contenido de la página 'Nosotros' guardado." });
+      } else {
+        throw new Error(result.error || "Error desconocido al guardar.");
+      }
     } catch (error) {
       console.error("Failed to save page content", error);
       toast({ title: "Error", description: `No se pudo guardar el contenido: ${error instanceof Error ? error.message : 'Error desconocido'}`, variant: "destructive" });
@@ -146,17 +114,18 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección Principal (Banner)</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="heroTitle">Título Principal</Label>
-                  <Input id="heroTitle" value={content.heroTitle || ''} onChange={handleContentChange} />
+                  <Input id="heroTitle" name="heroTitle" value={content.heroTitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="heroSubtitle">Subtítulo</Label>
-                  <Textarea id="heroSubtitle" value={content.heroSubtitle || ''} onChange={handleContentChange} />
+                  <Textarea id="heroSubtitle" name="heroSubtitle" value={content.heroSubtitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                     <Label>Imagen del Banner</Label>
                     <ImageInput 
                         initialUrl={content.heroImageUrl}
                         onUrlChange={(url) => setContent(p => p ? {...p, heroImageUrl: url} : null)}
+                        imageUrlName="heroImageUrl"
                         fileInputName="heroImageFile"
                         isSaving={isSaving}
                     />
@@ -168,17 +137,18 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección "Sobre Insumos Online"</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="aboutTitle">Título</Label>
-                  <Input id="aboutTitle" value={content.aboutTitle || ''} onChange={handleContentChange} />
+                  <Input id="aboutTitle" name="aboutTitle" value={content.aboutTitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="aboutDescription">Descripción</Label>
-                  <Textarea id="aboutDescription" rows={6} value={content.aboutDescription || ''} onChange={handleContentChange} />
+                  <Textarea id="aboutDescription" name="aboutDescription" rows={6} value={content.aboutDescription || ''} onChange={handleContentChange} />
                 </div>
                  <div className="grid gap-2">
                     <Label>Imagen de la Sección</Label>
                     <ImageInput 
                         initialUrl={content.aboutImageUrl}
                         onUrlChange={(url) => setContent(p => p ? {...p, aboutImageUrl: url} : null)}
+                        imageUrlName="aboutImageUrl"
                         fileInputName="aboutImageFile"
                         isSaving={isSaving}
                     />
@@ -190,7 +160,7 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección "Nuestro Equipo"</h3>
                  <div className="grid gap-2">
                   <Label htmlFor="teamTitle">Título de la Sección</Label>
-                  <Input id="teamTitle" value={content.teamTitle || ''} onChange={handleContentChange} placeholder="Ej: Conoce a Nuestro Equipo"/>
+                  <Input id="teamTitle" name="teamTitle" value={content.teamTitle || ''} onChange={handleContentChange} placeholder="Ej: Conoce a Nuestro Equipo"/>
                 </div>
                 <div className="space-y-6">
                     {(content.team || []).map((member, index) => (
@@ -201,6 +171,7 @@ export default function EditAboutPage() {
                                      <ImageInput 
                                         initialUrl={member.imageUrl}
                                         onUrlChange={(url) => handleTeamMemberChange(index, 'imageUrl', url)}
+                                        imageUrlName={`teamImageUrl_${index}`}
                                         fileInputName={`teamImageFile_${index}`}
                                         isSaving={isSaving}
                                     />
@@ -208,11 +179,11 @@ export default function EditAboutPage() {
                                 <div className="md:col-span-2 grid gap-4">
                                      <div className="grid gap-2">
                                         <Label htmlFor={`teamName_${index}`}>Nombre</Label>
-                                        <Input id={`teamName_${index}`} value={member.name || ''} onChange={(e) => handleTeamMemberChange(index, 'name', e.target.value)} />
+                                        <Input id={`teamName_${index}`} name={`teamName_${index}`} value={member.name || ''} onChange={(e) => handleTeamMemberChange(index, 'name', e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor={`teamRole_${index}`}>Cargo / Rol</Label>
-                                        <Input id={`teamRole_${index}`} value={member.role || ''} onChange={(e) => handleTeamMemberChange(index, 'role', e.target.value)} />
+                                        <Input id={`teamRole_${index}`} name={`teamRole_${index}`} value={member.role || ''} onChange={(e) => handleTeamMemberChange(index, 'role', e.target.value)} />
                                     </div>
                                 </div>
                                  <div className="md:col-span-3 flex justify-end">
@@ -248,13 +219,13 @@ export default function EditAboutPage() {
 interface ImageInputProps {
     initialUrl: string;
     onUrlChange: (url: string) => void;
+    imageUrlName: string;
     fileInputName: string;
     isSaving: boolean;
 }
 
-function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageInputProps) {
+function ImageInput({ initialUrl, onUrlChange, imageUrlName, fileInputName, isSaving }: ImageInputProps) {
     const [imageUrl, setImageUrl] = useState(initialUrl || '');
-    const [imageFile, setImageFile] = useState<File | null>(null);
 
     useEffect(() => {
         setImageUrl(initialUrl || '');
@@ -263,7 +234,6 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
     const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setImageFile(file);
             const localUrl = URL.createObjectURL(file);
             setImageUrl(localUrl); // Show local preview
             onUrlChange(localUrl);
@@ -273,7 +243,6 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
     const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newUrl = e.target.value;
         setImageUrl(newUrl);
-        setImageFile(null); // Clear file if URL is pasted
         onUrlChange(newUrl);
     };
 
@@ -287,6 +256,7 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
                     <Link2 className="h-4 w-4 text-muted-foreground"/>
                     <Input 
                         type="text" 
+                        name={imageUrlName}
                         placeholder="Pega una URL de imagen aquí" 
                         value={imageUrl || ''}
                         onChange={handleImageUrlChange}
