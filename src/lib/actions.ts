@@ -9,7 +9,7 @@ import type { AboutPageContent, HomePageContent, TeamMember } from './page-conte
 import type { Product } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
-
+import { Resend } from 'resend';
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
     // Content type is inferred by uploadBytes from the file extension
@@ -438,4 +438,39 @@ export async function deleteOrderAction(orderId: string) {
     console.error("Error deleting order:", error);
     return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar el pedido.' };
   }
+}
+
+export async function sendContactFormEmailAction(formData: FormData) {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const subject = formData.get('subject') as string;
+    const message = formData.get('message') as string;
+
+    if (!name || !email || !subject || !message) {
+        return { success: false, error: "Todos los campos son obligatorios." };
+    }
+    
+    try {
+        await resend.emails.send({
+            from: 'Insumos Online <onboarding@resend.dev>', // Must be a verified domain in Resend
+            to: process.env.CONTACT_FORM_EMAIL_TO as string,
+            reply_to: email,
+            subject: `Nuevo mensaje de contacto: ${subject}`,
+            html: `
+                <p>Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.</p>
+                <p><strong>Nombre:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Asunto:</strong> ${subject}</p>
+                <p><strong>Mensaje:</strong></p>
+                <p>${message}</p>
+            `,
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error sending email with Resend:", error);
+        return { success: false, error: "No se pudo enviar el mensaje. Por favor, inténtalo de nuevo más tarde." };
+    }
 }

@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -8,22 +9,36 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Phone, Mail, MapPin, Clock, Calendar, AlertTriangle } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { sendContactFormEmailAction } from '@/lib/actions';
 
 export default function ContactPage() {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Aquí iría la lógica para enviar el correo a través de un servicio.
-    // Por ahora, mostraremos una notificación de éxito.
-    toast({
-      title: '¡Mensaje Enviado!',
-      description: 'Gracias por contactarnos. Te responderemos lo antes posible.',
-    });
-    // Opcionalmente, resetear el formulario
-    (event.target as HTMLFormElement).reset();
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const result = await sendContactFormEmailAction(formData);
+
+    if (result.success) {
+      toast({
+        title: '¡Mensaje Enviado!',
+        description: 'Gracias por contactarnos. Te responderemos lo antes posible.',
+      });
+      (event.target as HTMLFormElement).reset();
+    } else {
+      toast({
+        title: 'Error al enviar',
+        description: result.error || 'Hubo un problema al enviar tu mensaje.',
+        variant: 'destructive',
+      });
+    }
+
+    setIsLoading(false);
   };
 
 
@@ -49,23 +64,24 @@ export default function ContactPage() {
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nombre</Label>
-                      <Input id="name" name="name" placeholder="Tu nombre completo" required />
+                      <Input id="name" name="name" placeholder="Tu nombre completo" required disabled={isLoading} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Correo Electrónico</Label>
-                      <Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
+                      <Input id="email" name="email" type="email" placeholder="tu@correo.com" required disabled={isLoading} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject">Asunto</Label>
-                    <Input id="subject" name="subject" placeholder="Ej: Consulta sobre un producto" required />
+                    <Input id="subject" name="subject" placeholder="Ej: Consulta sobre un producto" required disabled={isLoading} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="message">Mensaje</Label>
-                    <Textarea id="message" name="message" placeholder="Escribe tu mensaje aquí..." rows={5} required />
+                    <Textarea id="message" name="message" placeholder="Escribe tu mensaje aquí..." rows={5} required disabled={isLoading} />
                   </div>
-                  <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                    Enviar Mensaje
+                  <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading ? 'Enviando...' : 'Enviar Mensaje'}
                   </Button>
                 </form>
               </CardContent>
