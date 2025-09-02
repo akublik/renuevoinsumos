@@ -5,21 +5,22 @@ import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc
 import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
-import type { AboutPageContent, HomePageContent } from './page-content-types';
+import type { AboutPageContent, HomePageContent, TeamMember } from './page-content-types';
 import type { Product } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 
 
-const uploadFile = async (file: File, path: string, contentType: string): Promise<string> => {
+const uploadFile = async (file: File, path: string): Promise<string> => {
+    // Content type is inferred by uploadBytes from the file extension
     const fileRef = ref(storage, path);
-    const snapshot = await uploadBytes(fileRef, file, { contentType });
+    const snapshot = await uploadBytes(fileRef, file);
     return getDownloadURL(snapshot.ref);
 };
 
 export async function addProductAction(formData: FormData) {
     try {
-        getStorage(); // Ensures Storage is initialized in the server action context
+        getStorage(); 
 
         const priceString = formData.get('price') as string | null;
         const stockString = formData.get('stock') as string | null;
@@ -30,7 +31,6 @@ export async function addProductAction(formData: FormData) {
         
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrl = formData.get('imageUrl') as string | null;
-        const imageContentType = formData.get('imageContentType') as string | null;
         const pdfFile = formData.get('pdfFile') as File | null;
         const productName = formData.get('name') as string;
 
@@ -38,8 +38,8 @@ export async function addProductAction(formData: FormData) {
 
         if (imageUrl) {
             finalImageUrl = imageUrl;
-        } else if (imageFile && imageFile.size > 0 && imageContentType) {
-            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
+        } else if (imageFile && imageFile.size > 0) {
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
         }
 
         if (!finalImageUrl) {
@@ -48,7 +48,7 @@ export async function addProductAction(formData: FormData) {
 
         let pdfUrl: string | undefined;
         if (pdfFile && pdfFile.size > 0) {
-            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`, 'application/pdf');
+            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
         const productData: Omit<Product, 'id'> = {
@@ -108,7 +108,6 @@ export async function updateProductAction(formData: FormData) {
 
         const imageFile = formData.get('imageFile') as File | null;
         const imageUrlFromForm = formData.get('imageUrl') as string | null;
-        const imageContentType = formData.get('imageContentType') as string | null;
         const pdfFile = formData.get('pdfFile') as File | null;
         const productName = formData.get('name') as string;
 
@@ -127,8 +126,8 @@ export async function updateProductAction(formData: FormData) {
 
         let finalImageUrl: string | undefined;
 
-        if (imageFile && imageFile.size > 0 && imageContentType) {
-            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`, imageContentType);
+        if (imageFile && imageFile.size > 0) {
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
         } else if (imageUrlFromForm) {
             finalImageUrl = imageUrlFromForm;
         }
@@ -139,7 +138,7 @@ export async function updateProductAction(formData: FormData) {
         }
 
         if (pdfFile && pdfFile.size > 0) {
-            updateData.technicalSheetUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`, 'application/pdf');
+            updateData.technicalSheetUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
         Object.keys(updateData).forEach(key => {
@@ -171,11 +170,10 @@ export async function updateHomePageContentAction(formData: FormData) {
     try {
         getStorage();
         const imageFile = formData.get('imageFile') as File | null;
-        const imageContentType = formData.get('imageContentType') as string | null;
         let finalImageUrl = formData.get('heroImageUrl') as string;
 
-        if (imageFile && imageFile.size > 0 && imageContentType) {
-            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`, imageContentType);
+        if (imageFile && imageFile.size > 0) {
+            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`);
         }
 
         const content: HomePageContent = {
@@ -210,33 +208,53 @@ export async function updateAboutPageContentAction(formData: FormData) {
     const PAGE_ID = 'about';
     try {
         getStorage();
-        const imageFile = formData.get('imageFile') as File | null;
-        const imageContentType = formData.get('imageContentType') as string | null;
-        let finalImageUrl = formData.get('heroImageUrl') as string;
 
-        if (imageFile && imageFile.size > 0 && imageContentType) {
-            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`, imageContentType);
+        // Handle Hero Image
+        const heroImageFile = formData.get('heroImageFile') as File | null;
+        let finalHeroImageUrl = formData.get('heroImageUrl') as string;
+        if (heroImageFile && heroImageFile.size > 0) {
+            finalHeroImageUrl = await uploadFile(heroImageFile, `pages/${PAGE_ID}/hero_${Date.now()}_${heroImageFile.name}`);
         }
-        
+
+        // Handle About Image
+        const aboutImageFile = formData.get('aboutImageFile') as File | null;
+        let finalAboutImageUrl = formData.get('aboutImageUrl') as string;
+        if (aboutImageFile && aboutImageFile.size > 0) {
+            finalAboutImageUrl = await uploadFile(aboutImageFile, `pages/${PAGE_ID}/about_${Date.now()}_${aboutImageFile.name}`);
+        }
+
+        // Handle Team Members
+        const team: TeamMember[] = [];
+        let i = 0;
+        while (formData.has(`team[${i}][name]`)) {
+            const teamImageFile = formData.get(`teamImageFile_${i}`) as File | null;
+            let memberImageUrl = formData.get(`team[${i}][imageUrl]`) as string;
+            
+            if (teamImageFile && teamImageFile.size > 0) {
+                memberImageUrl = await uploadFile(teamImageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${teamImageFile.name}`);
+            }
+
+            team.push({
+                name: formData.get(`team[${i}][name]`) as string,
+                role: formData.get(`team[${i}][role]`) as string,
+                imageUrl: memberImageUrl,
+            });
+            i++;
+        }
+
         const content: AboutPageContent = {
             heroTitle: formData.get('heroTitle') as string,
             heroSubtitle: formData.get('heroSubtitle') as string,
-            heroImageUrl: finalImageUrl,
+            heroImageUrl: finalHeroImageUrl,
             aboutTitle: formData.get('aboutTitle') as string,
             aboutDescription: formData.get('aboutDescription') as string,
-            value1Title: formData.get('value1Title') as string,
-            value1Desc: formData.get('value1Desc') as string,
-            value2Title: formData.get('value2Title') as string,
-            value2Desc: formData.get('value2Desc') as string,
-            value3Title: formData.get('value3Title') as string,
-            value3Desc: formData.get('value3Desc') as string,
+            aboutImageUrl: finalAboutImageUrl,
+            teamTitle: formData.get('teamTitle') as string,
+            team: team,
         };
 
         const docRef = doc(db, 'pages', PAGE_ID);
-        await setDoc(docRef, {
-            ...content,
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
+        await setDoc(docRef, { ...content, updatedAt: serverTimestamp() }, { merge: true });
 
         revalidatePath('/about');
         revalidatePath('/admin/pages/about');
@@ -247,6 +265,7 @@ export async function updateAboutPageContentAction(formData: FormData) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to update page content.' };
     }
 }
+
 
 const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
 

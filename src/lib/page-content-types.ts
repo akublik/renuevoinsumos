@@ -11,16 +11,19 @@ export type HomePageContent = {
   whyPoint3: string;
 };
 
+export type TeamMember = {
+  name: string;
+  role: string;
+  imageUrl: string;
+};
+
 export type AboutPageContent = {
   heroImageUrl: string;
   heroTitle: string;
   heroSubtitle: string;
   aboutTitle: string;
   aboutDescription: string;
-  value1Title: string;
-  value1Desc: string;
-  value2Title: string;
-  value2Desc: string;
-  value3Title: string;
-  value3Desc: string;
+  aboutImageUrl: string;
+  teamTitle: string;
+  team: TeamMember[];
 };
