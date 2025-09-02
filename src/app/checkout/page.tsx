@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -14,12 +14,14 @@ import Footer from "@/components/footer";
 import { useCart } from "@/context/cart-context";
 import Image from "next/image";
 import { useFormToast } from "@/hooks/use-form-toast";
-import { CreditCard, Truck, Banknote, Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { CreditCard, Truck, Banknote, Loader2, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createOrderAction } from "@/lib/actions";
 import { useAuth } from "@/context/auth-context";
 import type { OrderData } from "@/lib/orders";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -31,6 +33,17 @@ const formSchema = z.object({
   paymentMethod: z.enum(["cash", "transfer"], {
     required_error: "Debes seleccionar un método de pago.",
   }),
+  needsInvoice: z.boolean().default(false),
+  ruc: z.string().optional(),
+  additionalNotes: z.string().optional(),
+}).refine((data) => {
+    if (data.needsInvoice && (!data.ruc || data.ruc.trim() === '')) {
+        return false;
+    }
+    return true;
+}, {
+    message: "El RUC/Cédula es obligatorio si necesitas factura.",
+    path: ["ruc"],
 });
 
 export default function CheckoutPage() {
@@ -49,8 +62,13 @@ export default function CheckoutPage() {
       city: "",
       country: "",
       paymentMethod: "cash",
+      needsInvoice: false,
+      ruc: "",
+      additionalNotes: "",
     },
   });
+  
+  const needsInvoice = form.watch("needsInvoice");
   
   // Redirect guest users to login page
   useEffect(() => {
@@ -211,6 +229,68 @@ export default function CheckoutPage() {
                     )} />
                   </CardContent>
                 </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Facturación</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="needsInvoice"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-base">¿Necesitas Factura?</FormLabel>
+                                        <FormDescription>
+                                            Activa esta opción si quieres una factura con RUC o Cédula.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {needsInvoice && (
+                            <FormField
+                                control={form.control}
+                                name="ruc"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Cédula / RUC</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Ingresa tu número de identificación" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Notas Adicionales (Opcional)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <FormField
+                            control={form.control}
+                            name="additionalNotes"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>¿Alguna instrucción especial para tu pedido o la entrega?</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Ej: Entregar en recepción, dejar el paquete en la puerta, etc." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
                 <Button type="submit" size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {form.formState.isSubmitting ? 'Procesando...' : 'Confirmar Pedido'}

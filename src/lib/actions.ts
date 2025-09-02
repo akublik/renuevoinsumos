@@ -334,11 +334,25 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
 
 export async function createOrderAction(orderData: OrderData) {
   try {
+    const { customer, ...restOfOrderData } = orderData;
+    const { ruc, needsInvoice, additionalNotes, ...restOfCustomer } = customer;
+
+    const customerToSave: { [key: string]: any } = { ...restOfCustomer };
+    if (needsInvoice) {
+        customerToSave.needsInvoice = true;
+        customerToSave.ruc = ruc;
+    }
+    if (additionalNotes) {
+        customerToSave.additionalNotes = additionalNotes;
+    }
+    
     const orderToSave = {
-      ...orderData,
+      ...restOfOrderData,
+      customer: customerToSave,
       status: 'Pendiente' as const,
       createdAt: serverTimestamp(),
     };
+    
     const docRef = await addDoc(collection(db, 'orders'), orderToSave);
     revalidatePath('/admin/orders');
     return { success: true, orderId: docRef.id };

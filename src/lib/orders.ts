@@ -17,6 +17,9 @@ export interface CustomerInfo {
   city: string;
   country: string;
   paymentMethod: 'cash' | 'transfer';
+  needsInvoice?: boolean;
+  ruc?: string;
+  additionalNotes?: string;
 }
 
 export interface OrderData {
