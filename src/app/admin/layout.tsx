@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { HeartPulse, Package, Home, FileEdit, ShoppingCart, BarChart3 } from 'lucide-react';
+import { HeartPulse, Package, Home, FileEdit, ShoppingCart, BarChart3, Users } from 'lucide-react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
@@ -67,6 +67,13 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
             >
               <ShoppingCart className="h-4 w-4" />
               Pedidos
+            </Link>
+            <Link
+              href="/admin/customers"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <Users className="h-4 w-4" />
+              Clientes
             </Link>
             <Link
               href="/admin/pages"
