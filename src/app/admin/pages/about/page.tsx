@@ -77,12 +77,11 @@ export default function EditAboutPage() {
     setIsSaving(true);
     
     const formData = new FormData();
+    
     // Append all simple key-value pairs from content
     Object.entries(content).forEach(([key, value]) => {
         if (typeof value === 'string') {
             formData.append(key, value);
-        } else if (key !== 'team') { // Avoid adding the team object directly
-             formData.append(key, JSON.stringify(value));
         }
     });
 
@@ -97,11 +96,16 @@ export default function EditAboutPage() {
         formData.append('aboutImageFile', imageAboutFile);
     }
     
-    // Serialize team data and handle team member image files
+    // Prepare team data
+    const teamDataForJson = (content.team || []).map(member => ({
+        name: member.name || '',
+        role: member.role || '',
+    }));
+    formData.append('teamData', JSON.stringify(teamDataForJson));
+
     (content.team || []).forEach((member, index) => {
-        formData.append(`team[${index}][name]`, member.name || '');
-        formData.append(`team[${index}][role]`, member.role || '');
-        formData.append(`team[${index}][imageUrl]`, member.imageUrl || '');
+        // Append existing image URL for the action to use if no new file is uploaded
+        formData.append(`teamImageUrl_${index}`, member.imageUrl || '');
         
         const memberImageFile = (document.querySelector(`input[name="teamImageFile_${index}"]`) as HTMLInputElement)?.files?.[0];
         if (memberImageFile) {

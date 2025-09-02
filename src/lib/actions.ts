@@ -232,21 +232,25 @@ export async function updateAboutPageContentAction(formData: FormData) {
 
         // Handle Team Members
         const team: TeamMember[] = [];
-        let i = 0;
-        while (formData.has(`team[${i}][name]`)) {
-            const teamImageFile = formData.get(`teamImageFile_${i}`) as File | null;
-            let memberImageUrl = formData.get(`team[${i}][imageUrl]`) as string;
-            
-            if (teamImageFile && teamImageFile.size > 0) {
-                memberImageUrl = await uploadFile(teamImageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${teamImageFile.name}`);
-            }
+        const teamDataRaw = formData.get('teamData') as string | null;
 
-            team.push({
-                name: formData.get(`team[${i}][name]`) as string,
-                role: formData.get(`team[${i}][role]`) as string,
-                imageUrl: memberImageUrl,
-            });
-            i++;
+        if (teamDataRaw) {
+            const teamData: Omit<TeamMember, 'imageUrl'>[] = JSON.parse(teamDataRaw);
+            for (let i = 0; i < teamData.length; i++) {
+                const member = teamData[i];
+                const teamImageFile = formData.get(`teamImageFile_${i}`) as File | null;
+                let memberImageUrl = formData.get(`teamImageUrl_${i}`) as string;
+
+                if (teamImageFile && teamImageFile.size > 0) {
+                    memberImageUrl = await uploadFile(teamImageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${teamImageFile.name}`);
+                }
+                
+                team.push({
+                    name: member.name,
+                    role: member.role,
+                    imageUrl: memberImageUrl,
+                });
+            }
         }
 
         const content: AboutPageContent = {
@@ -455,7 +459,7 @@ export async function sendContactFormEmailAction(formData: FormData) {
     try {
         await resend.emails.send({
             from: 'Insumos Online <onboarding@resend.dev>', // Must be a verified domain in Resend
-            to: process.env.CONTACT_FORM_EMAIL_TO as string,
+            to: 'info@estudionet.net',
             reply_to: email,
             subject: `Nuevo mensaje de contacto: ${subject}`,
             html: `
