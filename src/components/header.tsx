@@ -39,14 +39,14 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+        <div className="container mx-auto px-4 flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image 
               src="https://firebasestorage.googleapis.com/v0/b/enlaceimagen.firebasestorage.app/o/images%2Ff99575bd-8e4a-4fa3-8c5d-c6068c5c917d.png?alt=media&token=5b671a9d-40e9-492f-879b-5971d19882ff"
               alt="Insumos Online Logo"
               width={180}
               height={40}
-              className="h-10 w-auto"
+              className="h-14 w-auto"
               priority
             />
           </Link>
@@ -107,7 +107,7 @@ export default function Header() {
                       alt="Insumos Online Logo"
                       width={180}
                       height={40}
-                      className="h-10 w-auto"
+                      className="h-14 w-auto"
                     />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
