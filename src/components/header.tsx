@@ -44,11 +44,11 @@ export default function Header() {
             <Image 
               src="https://firebasestorage.googleapis.com/v0/b/enlaceimagen.firebasestorage.app/o/images%2Ff99575bd-8e4a-4fa3-8c5d-c6068c5c917d.png?alt=media&token=5b671a9d-40e9-492f-879b-5971d19882ff"
               alt="Insumos Online Logo"
-              width={40}
+              width={180}
               height={40}
               className="h-10 w-auto"
+              priority
             />
-            <span className="font-bold text-xl font-headline">Insumos Online</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -105,11 +105,10 @@ export default function Header() {
                      <Image 
                       src="https://firebasestorage.googleapis.com/v0/b/enlaceimagen.firebasestorage.app/o/images%2Ff99575bd-8e4a-4fa3-8c5d-c6068c5c917d.png?alt=media&token=5b671a9d-40e9-492f-879b-5971d19882ff"
                       alt="Insumos Online Logo"
-                      width={40}
+                      width={180}
                       height={40}
                       className="h-10 w-auto"
                     />
-                    <span className="font-bold text-xl font-headline">Insumos Online</span>
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
                     <X className="h-6 w-6" />
