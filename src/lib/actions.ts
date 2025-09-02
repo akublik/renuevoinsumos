@@ -254,7 +254,9 @@ export async function updateAboutPageContentAction(formData: FormData) {
         };
 
         const docRef = doc(db, 'pages', PAGE_ID);
-        await setDoc(docRef, { ...content, updatedAt: serverTimestamp() }, { merge: true });
+        // Using setDoc without merge will overwrite the entire document,
+        // effectively removing old, unused fields.
+        await setDoc(docRef, { ...content, updatedAt: serverTimestamp() });
 
         revalidatePath('/about');
         revalidatePath('/admin/pages/about');
