@@ -140,11 +140,11 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección Principal (Banner)</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="heroTitle">Título Principal</Label>
-                  <Input id="heroTitle" value={content.heroTitle} onChange={handleContentChange} />
+                  <Input id="heroTitle" value={content.heroTitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="heroSubtitle">Subtítulo</Label>
-                  <Textarea id="heroSubtitle" value={content.heroSubtitle} onChange={handleContentChange} />
+                  <Textarea id="heroSubtitle" value={content.heroSubtitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                     <Label>Imagen del Banner</Label>
@@ -162,11 +162,11 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección "Sobre Insumos Online"</h3>
                 <div className="grid gap-2">
                   <Label htmlFor="aboutTitle">Título</Label>
-                  <Input id="aboutTitle" value={content.aboutTitle} onChange={handleContentChange} />
+                  <Input id="aboutTitle" value={content.aboutTitle || ''} onChange={handleContentChange} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="aboutDescription">Descripción</Label>
-                  <Textarea id="aboutDescription" rows={6} value={content.aboutDescription} onChange={handleContentChange} />
+                  <Textarea id="aboutDescription" rows={6} value={content.aboutDescription || ''} onChange={handleContentChange} />
                 </div>
                  <div className="grid gap-2">
                     <Label>Imagen de la Sección</Label>
@@ -184,7 +184,7 @@ export default function EditAboutPage() {
                 <h3 className="text-xl font-semibold font-headline">Sección "Nuestro Equipo"</h3>
                  <div className="grid gap-2">
                   <Label htmlFor="teamTitle">Título de la Sección</Label>
-                  <Input id="teamTitle" value={content.teamTitle} onChange={handleContentChange} placeholder="Ej: Conoce a Nuestro Equipo"/>
+                  <Input id="teamTitle" value={content.teamTitle || ''} onChange={handleContentChange} placeholder="Ej: Conoce a Nuestro Equipo"/>
                 </div>
                 <div className="space-y-6">
                     {(content.team || []).map((member, index) => (
@@ -202,11 +202,11 @@ export default function EditAboutPage() {
                                 <div className="md:col-span-2 grid gap-4">
                                      <div className="grid gap-2">
                                         <Label htmlFor={`teamName_${index}`}>Nombre</Label>
-                                        <Input id={`teamName_${index}`} value={member.name} onChange={(e) => handleTeamMemberChange(index, 'name', e.target.value)} />
+                                        <Input id={`teamName_${index}`} value={member.name || ''} onChange={(e) => handleTeamMemberChange(index, 'name', e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor={`teamRole_${index}`}>Cargo / Rol</Label>
-                                        <Input id={`teamRole_${index}`} value={member.role} onChange={(e) => handleTeamMemberChange(index, 'role', e.target.value)} />
+                                        <Input id={`teamRole_${index}`} value={member.role || ''} onChange={(e) => handleTeamMemberChange(index, 'role', e.target.value)} />
                                     </div>
                                 </div>
                                  <div className="md:col-span-3 flex justify-end">
@@ -282,7 +282,7 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
                     <Input 
                         type="text" 
                         placeholder="Pega una URL de imagen aquí" 
-                        value={imageUrl}
+                        value={imageUrl || ''}
                         onChange={handleImageUrlChange}
                         disabled={isSaving}
                     />
@@ -303,3 +303,5 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
         </div>
     );
 }
+
+    
