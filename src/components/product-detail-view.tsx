@@ -58,9 +58,6 @@ export default function ProductDetailView({ product }: { product: Product }) {
               
               <div className="flex items-baseline gap-4 pt-4">
                  <p className="text-4xl font-bold text-accent">${product.price.toFixed(2)}</p>
-                 <p className={product.stock > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {product.stock > 0 ? `${product.stock} unidades disponibles` : 'Agotado'}
-                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
