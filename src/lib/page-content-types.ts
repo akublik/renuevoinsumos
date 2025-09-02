@@ -9,6 +9,7 @@ export type HomePageContent = {
   whyPoint1: string;
   whyPoint2: string;
   whyPoint3: string;
+  whyImageUrl: string;
 };
 
 export type TeamMember = {

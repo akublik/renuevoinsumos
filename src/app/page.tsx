@@ -105,7 +105,7 @@ export default async function Home() {
               </div>
               <div className="rounded-lg overflow-hidden shadow-xl">
                 <Image
-                  src="https://picsum.photos/600/400"
+                  src={content.whyImageUrl || 'https://picsum.photos/600/400'}
                   alt="Personal médico con insumos"
                   width={600}
                   height={400}

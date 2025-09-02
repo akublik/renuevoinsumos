@@ -169,23 +169,30 @@ export async function updateHomePageContentAction(formData: FormData) {
     const PAGE_ID = 'home';
     try {
         getStorage();
-        const imageFile = formData.get('imageFile') as File | null;
-        let finalImageUrl = formData.get('heroImageUrl') as string;
+        const heroImageFile = formData.get('heroImageFile') as File | null;
+        let finalHeroImageUrl = formData.get('heroImageUrl') as string;
 
-        if (imageFile && imageFile.size > 0) {
-            finalImageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/${Date.now()}_${imageFile.name}`);
+        if (heroImageFile && heroImageFile.size > 0) {
+            finalHeroImageUrl = await uploadFile(heroImageFile, `pages/${PAGE_ID}/hero_${Date.now()}_${heroImageFile.name}`);
+        }
+
+        const whyImageFile = formData.get('whyImageFile') as File | null;
+        let finalWhyImageUrl = formData.get('whyImageUrl') as string;
+        if (whyImageFile && whyImageFile.size > 0) {
+            finalWhyImageUrl = await uploadFile(whyImageFile, `pages/${PAGE_ID}/why_${Date.now()}_${whyImageFile.name}`);
         }
 
         const content: HomePageContent = {
             heroTitle: formData.get('heroTitle') as string,
             heroSubtitle: formData.get('heroSubtitle') as string,
             heroButtonText: formData.get('heroButtonText') as string,
-            heroImageUrl: finalImageUrl,
+            heroImageUrl: finalHeroImageUrl,
             whyTitle: formData.get('whyTitle') as string,
             whyDescription: formData.get('whyDescription') as string,
             whyPoint1: formData.get('whyPoint1') as string,
             whyPoint2: formData.get('whyPoint2') as string,
             whyPoint3: formData.get('whyPoint3') as string,
+            whyImageUrl: finalWhyImageUrl,
         };
 
         const docRef = doc(db, 'pages', PAGE_ID);
