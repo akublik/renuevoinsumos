@@ -395,3 +395,21 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     return { success: false, error: error instanceof Error ? error.message : 'No se pudo actualizar el estado del pedido.' };
   }
 }
+
+export async function deleteOrderAction(orderId: string) {
+  if (!orderId) {
+    return { success: false, error: "Se requiere el ID del pedido." };
+  }
+  try {
+    const docRef = doc(db, 'orders', orderId);
+    await deleteDoc(docRef);
+
+    revalidatePath('/admin/customers');
+    revalidatePath('/admin/orders');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar el pedido.' };
+  }
+}
