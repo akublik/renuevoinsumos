@@ -81,10 +81,12 @@ export default function EditAboutPage() {
     Object.entries(content).forEach(([key, value]) => {
         if (typeof value === 'string') {
             formData.append(key, value);
+        } else if (key !== 'team') { // Avoid adding the team object directly
+             formData.append(key, JSON.stringify(value));
         }
     });
 
-    // Handle file inputs and complex objects like 'team'
+    // Handle file inputs
     const imageHeroFile = (document.querySelector('input[name="heroImageFile"]') as HTMLInputElement)?.files?.[0];
     if (imageHeroFile) {
         formData.append('heroImageFile', imageHeroFile);
@@ -96,10 +98,10 @@ export default function EditAboutPage() {
     }
     
     // Serialize team data and handle team member image files
-    content.team?.forEach((member, index) => {
-        formData.append(`team[${index}][name]`, member.name);
-        formData.append(`team[${index}][role]`, member.role);
-        formData.append(`team[${index}][imageUrl]`, member.imageUrl);
+    (content.team || []).forEach((member, index) => {
+        formData.append(`team[${index}][name]`, member.name || '');
+        formData.append(`team[${index}][role]`, member.role || '');
+        formData.append(`team[${index}][imageUrl]`, member.imageUrl || '');
         
         const memberImageFile = (document.querySelector(`input[name="teamImageFile_${index}"]`) as HTMLInputElement)?.files?.[0];
         if (memberImageFile) {
@@ -303,5 +305,3 @@ function ImageInput({ initialUrl, onUrlChange, fileInputName, isSaving }: ImageI
         </div>
     );
 }
-
-    
