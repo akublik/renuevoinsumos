@@ -31,7 +31,7 @@ export default async function ProductsPage({
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold font-headline">Nuestro Catálogo</h1>
+            <h1 className="text-4xl md:text-5xl font-bold font-headline">Nuestra Tienda</h1>
             <p className="text-lg text-muted-foreground mt-2">Encuentra todo lo que necesitas en un solo lugar.</p>
         </div>
 
