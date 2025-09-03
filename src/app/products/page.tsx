@@ -35,26 +35,15 @@ export default async function ProductsPage({
             <p className="text-lg text-muted-foreground mt-2">Encuentra todo lo que necesitas en un solo lugar.</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          <aside className="w-full md:w-1/4 lg:w-1/5">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Categorías</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-2">
-                        {categories.map(category => (
-                            <li key={category}>
-                                <Button variant="ghost" className="w-full justify-start" asChild>
-                                    <Link href="#">{category}</Link>
-                                </Button>
-                            </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
-          </aside>
-          <section className="w-full md:w-3/4 lg:w-4/5">
+        <div className="flex justify-center flex-wrap gap-2 mb-12">
+            {categories.map(category => (
+                <Button key={category} variant="outline" asChild>
+                    <Link href="#">{category}</Link>
+                </Button>
+            ))}
+        </div>
+
+        <section className="w-full">
             {paginatedProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedProducts.map((product) => (
@@ -86,8 +75,7 @@ export default async function ProductsPage({
                     </Button>
                 </div>
             )}
-          </section>
-        </div>
+        </section>
       </main>
       <Footer />
     </div>
