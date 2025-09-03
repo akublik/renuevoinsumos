@@ -20,10 +20,17 @@ export default async function ProductsPage({
   const allProducts = await getProductsFromFirestore();
   const currentPage = Number(searchParams?.page) || 1;
   const currentCategory = searchParams?.category as ProductCategory | undefined;
+  const searchQuery = searchParams?.search as string | undefined;
 
-  const filteredProducts = currentCategory 
+  const categoryFilteredProducts = currentCategory 
     ? allProducts.filter(product => product.category === currentCategory)
     : allProducts;
+
+  const filteredProducts = searchQuery
+    ? categoryFilteredProducts.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : categoryFilteredProducts;
   
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
 
@@ -34,15 +41,15 @@ export default async function ProductsPage({
 
   const createPageURL = (pageNumber: number) => {
     const params = new URLSearchParams();
-    if (currentCategory) {
-      params.set('category', currentCategory);
-    }
+    if (currentCategory) params.set('category', currentCategory);
+    if (searchQuery) params.set('search', searchQuery);
     params.set('page', pageNumber.toString());
     return `/products?${params.toString()}`;
   };
   
   const createCategoryURL = (category: string | null) => {
       const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
       params.set('page', '1'); // Reset to first page on category change
       if (category) {
           params.set('category', category);
@@ -71,6 +78,11 @@ export default async function ProductsPage({
         </div>
 
         <section className="w-full">
+            {searchQuery && (
+              <div className="text-center mb-8">
+                <p className="text-muted-foreground">Mostrando resultados para: <span className="font-semibold text-foreground">"{searchQuery}"</span></p>
+              </div>
+            )}
             {paginatedProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedProducts.map((product) => (
@@ -79,7 +91,7 @@ export default async function ProductsPage({
                 </div>
             ) : (
                 <div className="text-center text-muted-foreground py-16">
-                    <p>No se encontraron productos para esta categoría. Intenta con otra o mostrando todos.</p>
+                    <p>No se encontraron productos que coincidan con tu búsqueda.</p>
                 </div>
             )}
             

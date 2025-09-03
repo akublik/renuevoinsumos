@@ -17,6 +17,7 @@ import { Badge } from "./ui/badge";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const { cartItems, setIsCartOpen } = useCart();
   const router = useRouter();
@@ -24,6 +25,16 @@ export default function Header() {
   const handleLogout = async () => {
     await logoutUser();
     router.push('/');
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      router.push(`/products?search=${encodeURIComponent(trimmedQuery)}`);
+      setSearchQuery("");
+      if(isMobileMenuOpen) setIsMobileMenuOpen(false);
+    }
   };
 
   const navLinks = [
@@ -64,10 +75,18 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Buscar productos..." className="pl-10 w-48" />
-            </div>
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type="search" 
+                  placeholder="Buscar productos..." 
+                  className="pl-10 w-48"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                />
+              </div>
+            </form>
             {user ? (
               <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar Sesión">
                 <LogOut className="h-5 w-5" />
@@ -131,10 +150,18 @@ export default function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto p-4 border-t space-y-4">
-                  <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input type="search" placeholder="Buscar..." className="pl-10" />
-                    </div>
+                  <form onSubmit={handleSearch}>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          type="search" 
+                          placeholder="Buscar..." 
+                          className="pl-10" 
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                  </form>
                   {user ? (
                     <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full">
                       <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
