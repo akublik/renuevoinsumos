@@ -15,7 +15,7 @@ const PRODUCTS_PER_PAGE = 9;
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams?: { page?: string, category?: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const allProducts = await getProductsFromFirestore();
   const currentPage = Number(searchParams?.page) || 1;
@@ -33,7 +33,7 @@ export default async function ProductsPage({
   );
 
   const createPageURL = (pageNumber: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams as Record<string, string>);
     params.set('page', pageNumber.toString());
     return `/products?${params.toString()}`;
   };
