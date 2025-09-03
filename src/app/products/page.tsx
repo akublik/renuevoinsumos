@@ -33,18 +33,19 @@ export default async function ProductsPage({
   );
 
   const createPageURL = (pageNumber: number) => {
-    const params = new URLSearchParams(searchParams as Record<string, string>);
+    const params = new URLSearchParams();
+    if (currentCategory) {
+      params.set('category', currentCategory);
+    }
     params.set('page', pageNumber.toString());
     return `/products?${params.toString()}`;
   };
   
   const createCategoryURL = (category: string | null) => {
-      const params = new URLSearchParams(searchParams as Record<string, string>);
+      const params = new URLSearchParams();
       params.set('page', '1'); // Reset to first page on category change
       if (category) {
           params.set('category', category);
-      } else {
-          params.delete('category');
       }
       return `/products?${params.toString()}`;
   }
