@@ -44,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </CardHeader>
             <CardContent className="p-4 flex-grow flex flex-col">
                 <Badge variant="secondary" className="mb-2 self-start">{product.category}</Badge>
-                <CardTitle className="text-lg font-headline font-semibold mb-2 h-14 flex-grow">{product.name}</CardTitle>
+                <CardTitle className="text-lg font-headline font-semibold mb-2 h-14 line-clamp-2">{product.name}</CardTitle>
                 <p className="text-2xl font-bold text-accent mt-auto">${product.price.toFixed(2)}</p>
             </CardContent>
             <CardFooter className="p-4 pt-0 mt-auto">
