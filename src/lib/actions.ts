@@ -232,23 +232,24 @@ export async function updateAboutPageContentAction(formData: FormData) {
 
         // Handle Team Members
         const team: TeamMember[] = [];
-        const memberCount = Array.from(formData.keys()).filter(key => key.startsWith('teamName_')).length;
+        const memberKeys = Array.from(formData.keys()).filter(key => key.startsWith('teamName_'));
 
-        for (let i = 0; i < memberCount; i++) {
-            const name = formData.get(`teamName_${i}`) as string;
-            const role = formData.get(`teamRole_${i}`) as string;
-            let imageUrl = formData.get(`teamImageUrl_${i}`) as string;
-            const imageFile = formData.get(`teamImageFile_${i}`) as File | null;
+        for (const key of memberKeys) {
+            const index = key.split('_')[1];
+            const name = formData.get(`teamName_${index}`) as string;
+            const role = formData.get(`teamRole_${index}`) as string;
+            let imageUrl = formData.get(`teamImageUrl_${index}`) as string;
+            const imageFile = formData.get(`teamImageFile_${index}`) as File | null;
 
             if (imageFile && imageFile.size > 0) {
-                imageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/team_${i}_${Date.now()}_${imageFile.name}`);
+                imageUrl = await uploadFile(imageFile, `pages/${PAGE_ID}/team_${index}_${Date.now()}_${imageFile.name}`);
             }
 
             if (name && role) { // Only add if name and role are present
                 team.push({ name, role, imageUrl });
             }
         }
-
+        
         const content: AboutPageContent = {
             heroTitle: formData.get('heroTitle') as string,
             heroSubtitle: formData.get('heroSubtitle') as string,
@@ -277,22 +278,16 @@ export async function updateAboutPageContentAction(formData: FormData) {
 const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
 
 type CsvRow = {
-    PRODUCTO: string;
-    MARCA: string;
-    DESCRIPCION: string;
-    CATEGORIA: string;
-    PRECIO: string;
-    STOCK: string;
-    COLOR?: string;
-    TALLA?: string;
-    IMAGEN: string;
+    [key: string]: string;
 };
 
 export async function addProductsFromCSVAction(csvContent: string): Promise<{ success: boolean; successCount?: number; errorCount?: number; error?: string }> {
     try {
+        // This function will convert all header keys to uppercase for consistency
         const results = Papa.parse<CsvRow>(csvContent, {
             header: true,
             skipEmptyLines: true,
+            transformHeader: header => header.toUpperCase().trim(),
         });
 
         const rows = results.data;

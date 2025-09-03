@@ -63,7 +63,7 @@ export default function ImportProductsPage() {
   };
 
   const downloadCsvTemplate = () => {
-    const header = "PRODUCTO,MARCA,DESCRIPCION,CATEGORIA,PRECIO,STOCK,COLOR,TALLA,IMAGEN\n";
+    const header = "producto,marca,descripcion,categoria,precio,stock,color,talla,imagen\n";
     const example = "Guantes de Nitrilo,MedSafe,Caja de 100 guantes,Consumibles,15.99,250,Azul,M,https://picsum.photos/400/400\n";
     const blob = new Blob([header + example], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
