@@ -283,11 +283,10 @@ type CsvRow = {
 
 export async function addProductsFromCSVAction(csvContent: string): Promise<{ success: boolean; successCount?: number; errorCount?: number; error?: string }> {
     try {
-        // This function will convert all header keys to uppercase for consistency
         const results = Papa.parse<CsvRow>(csvContent, {
             header: true,
             skipEmptyLines: true,
-            transformHeader: header => header.toUpperCase().trim(),
+            transformHeader: header => header.trim().toUpperCase(),
         });
 
         const rows = results.data;
@@ -298,25 +297,30 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
 
         for (const row of rows) {
             try {
-                const price = parseFloat(row.PRECIO);
-                const stock = parseInt(row.STOCK, 10);
-                const category = row.CATEGORIA as Product['category'];
-
-                if (!row.PRODUCTO || !row.IMAGEN || isNaN(price) || isNaN(stock) || !validCategories.includes(category)) {
-                   console.error('Invalid or incomplete row data, skipping:', row);
-                   errorCount++;
-                   continue;
+                // El único campo realmente obligatorio es el nombre.
+                const productName = row.PRODUCTO;
+                if (!productName) {
+                    console.error('Fila omitida: falta el nombre del producto.', row);
+                    errorCount++;
+                    continue;
                 }
 
+                // Usar valores por defecto para campos opcionales.
+                const price = parseFloat(row.PRECIO) || 0;
+                const stock = parseInt(row.STOCK, 10) || 0;
+                const categoryInput = row.CATEGORIA as Product['category'];
+                const category = validCategories.includes(categoryInput) ? categoryInput : 'Consumibles';
+                const imageUrl = row.IMAGEN || `https://picsum.photos/400/400?random=${Math.random()}`;
+
                 const newProduct: Omit<Product, 'id' | 'createdAt'> = {
-                    name: row.PRODUCTO,
+                    name: productName,
                     brand: row.MARCA,
                     description: row.DESCRIPCION,
                     category: category,
                     price: price,
                     stock: stock,
-                    imageUrl: row.IMAGEN,
-                    images: [row.IMAGEN],
+                    imageUrl: imageUrl,
+                    images: [imageUrl],
                     color: row.COLOR || undefined,
                     size: row.TALLA || undefined,
                 };
@@ -325,7 +329,7 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
                 
                 const productToSave: { [key: string]: any } = { ...newProduct, createdAt: serverTimestamp() };
 
-                // Clean up empty optional fields to prevent Firestore errors
+                // Limpiar campos vacíos opcionales para no guardarlos en Firestore.
                 Object.keys(productToSave).forEach(key => {
                     if (productToSave[key] === undefined || productToSave[key] === null || productToSave[key] === '') {
                         delete productToSave[key];
@@ -336,7 +340,7 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
                 successCount++;
 
             } catch(e) {
-                console.error('Error processing row:', row, e);
+                console.error('Error procesando la fila:', row, e);
                 errorCount++;
             }
         }
@@ -348,7 +352,7 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
         return { success: true, successCount, errorCount };
 
     } catch (error) {
-        console.error("Error in addProductsFromCSVAction: ", error);
+        console.error("Error en addProductsFromCSVAction: ", error);
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 }
