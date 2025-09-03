@@ -39,7 +39,7 @@ export default async function ProductsPage({
   };
   
   const createCategoryURL = (category: string | null) => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParams as Record<string, string>);
       params.set('page', '1'); // Reset to first page on category change
       if (category) {
           params.set('category', category);
