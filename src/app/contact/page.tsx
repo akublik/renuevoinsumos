@@ -127,7 +127,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold font-headline text-center mb-8">Nuestra Ubicación</h2>
             <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-xl border">
               <iframe
-                src="https://maps.google.com/maps?q=Valle%20de%20los%20Chillos,%20Sangolqu%C3%AD%20%E2%80%93%20Rumiloma,%20Panzaleos%20y%20Ca%C3%B1aris%202,%20Ecuador&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.659929259223!2d-78.4747093!3d-0.3269687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d5bd2cb5c27c45%3A0xe0cbc330d6f94fe7!2sRenuevo%20Centro%20de%20Especialidades%20Medicas!5e0!3m2!1ses-419!2sec!4v1628186291642!5m2!1ses-419!2sec"
                 width="100%"
                 height="450"
                 style={{ border: 0 }}
