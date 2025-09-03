@@ -6,7 +6,8 @@ import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent, TeamMember } from './page-content-types';
-import type { Product } from './products';
+import type { Product, ProductCategory } from './products';
+import { categories as validCategories } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 import { Resend } from 'resend';
@@ -55,7 +56,7 @@ export async function addProductAction(formData: FormData) {
             name: productName,
             brand: formData.get('brand') as string,
             description: formData.get('description') as string,
-            category: formData.get('category') as Product['category'],
+            category: formData.get('category') as ProductCategory,
             price: parseFloat(priceString),
             stock: parseInt(stockString, 10),
             color: formData.get('color') as string || undefined,
@@ -115,7 +116,7 @@ export async function updateProductAction(formData: FormData) {
             name: productName,
             brand: formData.get('brand') as string,
             description: formData.get('description') as string,
-            category: formData.get('category') as Product['category'],
+            category: formData.get('category') as ProductCategory,
             price: parseFloat(priceString),
             stock: parseInt(stockString, 10),
             color: formData.get('color') as string || undefined,
@@ -274,9 +275,6 @@ export async function updateAboutPageContentAction(formData: FormData) {
     }
 }
 
-
-const validCategories: Product['category'][] = ['Equipamiento', 'Consumibles', 'Instrumental', 'Primeros Auxilios'];
-
 type CsvRow = {
     [key: string]: string;
 };
@@ -286,7 +284,7 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
         const results = Papa.parse<CsvRow>(csvContent, {
             header: true,
             skipEmptyLines: true,
-            transformHeader: header => header.trim().toUpperCase(),
+            transformHeader: header => header.trim().toLowerCase(),
         });
 
         const rows = results.data;
@@ -297,39 +295,36 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
 
         for (const row of rows) {
             try {
-                // El único campo realmente obligatorio es el nombre.
-                const productName = row.PRODUCTO;
+                const productName = row.producto;
                 if (!productName) {
                     console.error('Fila omitida: falta el nombre del producto.', row);
                     errorCount++;
                     continue;
                 }
 
-                // Usar valores por defecto para campos opcionales.
-                const price = parseFloat(row.PRECIO) || 0;
-                const stock = parseInt(row.STOCK, 10) || 0;
-                const categoryInput = row.CATEGORIA as Product['category'];
-                const category = validCategories.includes(categoryInput) ? categoryInput : 'Consumibles';
-                const imageUrl = row.IMAGEN || `https://picsum.photos/400/400?random=${Math.random()}`;
+                const price = parseFloat(row.precio) || 0;
+                const stock = parseInt(row.stock, 10) || 0;
+                const categoryInput = row.categoria as ProductCategory;
+                const category = validCategories.includes(categoryInput) ? categoryInput : 'INSUMOS MÉDICOS Y OTROS';
+                const imageUrl = row.imagen || `https://picsum.photos/400/400?random=${Math.random()}`;
 
                 const newProduct: Omit<Product, 'id' | 'createdAt'> = {
                     name: productName,
-                    brand: row.MARCA,
-                    description: row.DESCRIPCION,
+                    brand: row.marca,
+                    description: row.descripcion,
                     category: category,
                     price: price,
                     stock: stock,
                     imageUrl: imageUrl,
                     images: [imageUrl],
-                    color: row.COLOR || undefined,
-                    size: row.TALLA || undefined,
+                    color: row.color || undefined,
+                    size: row.talla || undefined,
                 };
                 
                 const docRef = doc(collection(db, "products"));
                 
                 const productToSave: { [key: string]: any } = { ...newProduct, createdAt: serverTimestamp() };
 
-                // Limpiar campos vacíos opcionales para no guardarlos en Firestore.
                 Object.keys(productToSave).forEach(key => {
                     if (productToSave[key] === undefined || productToSave[key] === null || productToSave[key] === '') {
                         delete productToSave[key];

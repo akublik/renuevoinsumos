@@ -3,7 +3,7 @@
 
 import { db } from './firebase';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, where, QueryConstraint } from 'firebase/firestore';
-import type { Product } from './products';
+import type { Product, ProductCategory } from './products';
 
 /**
  * Fetches a single product by its ID from Firestore.
@@ -28,7 +28,7 @@ export async function getProductById(id: string): Promise<Product | null> {
             name: data.name || '',
             brand: data.brand || '',
             description: data.description || '',
-            category: data.category || 'Consumibles',
+            category: data.category || 'INSUMOS MÉDICOS Y OTROS',
             price: data.price || 0,
             stock: data.stock || 0,
             imageUrl: data.imageUrl || '',
@@ -83,7 +83,7 @@ export async function getProductsFromFirestore(options: { productLimit?: number,
         name: data.name || '',
         brand: data.brand || '',
         description: data.description || '',
-        category: data.category || 'Consumibles',
+        category: data.category || 'INSUMOS MÉDICOS Y OTROS',
         price: data.price || 0,
         stock: data.stock || 0,
         imageUrl: data.imageUrl || '',

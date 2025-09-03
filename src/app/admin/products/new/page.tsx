@@ -14,6 +14,7 @@ import { ArrowLeft, Link2, Loader2, Star } from 'lucide-react';
 import { addProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { categories } from '@/lib/products';
 
 export default function NewProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,10 +119,9 @@ export default function NewProductPage() {
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Equipamiento">Equipamiento</SelectItem>
-                    <SelectItem value="Consumibles">Consumibles</SelectItem>
-                    <SelectItem value="Instrumental">Instrumental</SelectItem>
-                    <SelectItem value="Primeros Auxilios">Primeros Auxilios</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

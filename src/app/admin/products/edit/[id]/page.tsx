@@ -16,6 +16,7 @@ import { updateProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
+import { categories } from '@/lib/products';
 import { Switch } from '@/components/ui/switch';
 
 export default function EditProductPage() {
@@ -159,10 +160,9 @@ export default function EditProductPage() {
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Equipamiento">Equipamiento</SelectItem>
-                    <SelectItem value="Consumibles">Consumibles</SelectItem>
-                    <SelectItem value="Instrumental">Instrumental</SelectItem>
-                    <SelectItem value="Primeros Auxilios">Primeros Auxilios</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
