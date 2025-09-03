@@ -7,7 +7,7 @@ import Image from "next/image";
 import { HeartPulse, Search, User, ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/context/auth-context";
 import { logoutUser } from "@/lib/auth-service";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export default function Header() {
     { href: "/products", label: "Productos" },
     { href: "/about", label: "Nosotros" },
     { href: "/contact", label: "Contacto" },
-    ...(user ? [{ href: "/admin/products", label: "Admin" }] : []),
+    ...(user && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ? [{ href: "/admin", label: "Admin" }] : []),
   ];
   
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -99,6 +99,9 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
+                <SheetHeader>
+                    <SheetTitle className="sr-only">Menú Principal</SheetTitle>
+                </SheetHeader>
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
