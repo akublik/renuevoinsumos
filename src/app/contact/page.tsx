@@ -123,6 +123,20 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
+        <div className="container mx-auto px-4 mt-16">
+            <h2 className="text-3xl font-bold font-headline text-center mb-8">Nuestra Ubicación</h2>
+            <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-xl border">
+              <iframe
+                src="https://maps.google.com/maps?q=Valle%20de%20los%20Chillos,%20Sangolqu%C3%AD%20%E2%80%93%20Rumiloma,%20Panzaleos%20y%20Ca%C3%B1aris%202,%20Ecuador&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="450"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          </div>
       </main>
       <Footer />
     </div>
