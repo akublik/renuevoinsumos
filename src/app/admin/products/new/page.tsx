@@ -36,6 +36,13 @@ export default function NewProductPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
+    const form = e.currentTarget;
+    if (!form) {
+        toast({ title: "Error", description: "No se encontró el formulario.", variant: "destructive" });
+        setIsSubmitting(false);
+        return;
+    }
+
     try {
         let finalImageUrl = imageUrl;
         if (imageFile) {
@@ -57,7 +64,7 @@ export default function NewProductPage() {
             finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
         
-        const formElements = e.currentTarget.elements as HTMLFormControlsCollection;
+        const formElements = form.elements as HTMLFormControlsCollection;
         const formData = new FormData();
         
         formData.append('name', (formElements.namedItem('name') as HTMLInputElement).value);
