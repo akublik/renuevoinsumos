@@ -72,15 +72,27 @@ export default function EditProductPage() {
             finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
 
-        const form = e.currentTarget;
-        const formData = new FormData(form);
+        const formElements = e.currentTarget.elements as HTMLFormControlsCollection;
+        const formData = new FormData();
+        
         formData.append('productId', productId);
+        formData.append('name', (formElements.namedItem('name') as HTMLInputElement).value);
+        formData.append('brand', (formElements.namedItem('brand') as HTMLInputElement).value);
+        formData.append('description', (formElements.namedItem('description') as HTMLTextAreaElement).value);
+        formData.append('category', (formElements.namedItem('category') as HTMLSelectElement).value);
+        formData.append('price', (formElements.namedItem('price') as HTMLInputElement).value);
+        formData.append('stock', (formElements.namedItem('stock') as HTMLInputElement).value);
+        formData.append('color', (formElements.namedItem('color') as HTMLInputElement).value);
+        formData.append('size', (formElements.namedItem('size') as HTMLInputElement).value);
+        const isFeaturedSwitch = formElements.namedItem('isFeatured') as HTMLInputElement;
+        if (isFeaturedSwitch && isFeaturedSwitch.checked) {
+          formData.append('isFeatured', 'on');
+        }
+        
         formData.set('imageUrl', finalImageUrl);
         
         if (finalPdfUrl) {
             formData.append('technicalSheetUrl', finalPdfUrl);
-        } else {
-            formData.delete('pdfFile');
         }
         
         const result = await updateProductAction(formData);
