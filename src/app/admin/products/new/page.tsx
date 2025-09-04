@@ -30,6 +30,7 @@ export default function NewProductPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState('');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isFeatured, setIsFeatured] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,6 +39,7 @@ export default function NewProductPage() {
     
     const form = e.currentTarget;
     const formData = new FormData(form);
+    formData.set('isFeatured', isFeatured ? 'on' : 'off');
 
     try {
         let finalImageUrl = imageUrl;
@@ -64,7 +66,6 @@ export default function NewProductPage() {
         if (finalPdfUrl) {
             formData.set('technicalSheetUrl', finalPdfUrl);
         } else {
-            // Ensure we don't send an empty file
             formData.delete('pdfFile');
         }
         
@@ -176,7 +177,12 @@ export default function NewProductPage() {
             </div>
              <div className="grid gap-2">
                 <div className="flex items-center space-x-2">
-                  <Switch id="isFeatured" name="isFeatured" />
+                  <Switch 
+                    id="isFeatured" 
+                    name="isFeatured" 
+                    checked={isFeatured}
+                    onCheckedChange={setIsFeatured}
+                  />
                   <Label htmlFor="isFeatured" className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-400" />
                     Marcar como producto destacado en la página de inicio
