@@ -11,10 +11,11 @@ import { categories as validCategories } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 import { Resend } from 'resend';
-import { auth } from './firebase';
+import { getCurrentUser } from './auth-service';
+
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
-    const user = auth.currentUser;
+    const user = await getCurrentUser();
     if (!user) {
         throw new Error("Usuario no autenticado. No se puede subir el archivo.");
     }
@@ -25,8 +26,6 @@ const uploadFile = async (file: File, path: string): Promise<string> => {
 
 export async function addProductAction(formData: FormData) {
     try {
-        getStorage(); 
-
         const priceString = formData.get('price') as string | null;
         const stockString = formData.get('stock') as string | null;
 
@@ -41,10 +40,10 @@ export async function addProductAction(formData: FormData) {
 
         let finalImageUrl: string | undefined;
 
-        if (imageUrl) {
-            finalImageUrl = imageUrl;
-        } else if (imageFile && imageFile.size > 0) {
+        if (imageFile && imageFile.size > 0) {
             finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
+        } else if (imageUrl) {
+            finalImageUrl = imageUrl;
         }
 
         if (!finalImageUrl) {
@@ -97,8 +96,6 @@ export async function addProductAction(formData: FormData) {
 
 export async function updateProductAction(formData: FormData) {
     try {
-        getStorage();
-
         const productId = formData.get('productId') as string;
         if (!productId) {
             return { success: false, error: 'Falta el ID del producto.' };
@@ -173,7 +170,6 @@ export async function updateProductAction(formData: FormData) {
 export async function updateHomePageContentAction(formData: FormData) {
     const PAGE_ID = 'home';
     try {
-        getStorage();
         const heroImageFile = formData.get('heroImageFile') as File | null;
         let finalHeroImageUrl = formData.get('heroImageUrl') as string;
 
@@ -219,8 +215,6 @@ export async function updateHomePageContentAction(formData: FormData) {
 export async function updateAboutPageContentAction(formData: FormData) {
     const PAGE_ID = 'about';
     try {
-        getStorage();
-
         // Handle Hero Image
         const heroImageFile = formData.get('heroImageFile') as File | null;
         let finalHeroImageUrl = formData.get('heroImageUrl') as string;
@@ -474,5 +468,3 @@ export async function sendContactFormEmailAction(formData: FormData) {
         return { success: false, error: "No se pudo enviar el mensaje. Por favor, inténtalo de nuevo más tarde." };
     }
 }
-
-    
