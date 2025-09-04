@@ -2,23 +2,14 @@
 'use server';
 
 import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc, deleteDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
-import { db, storage } from './firebase';
+import { db } from './firebase';
 import type { AboutPageContent, HomePageContent, TeamMember } from './page-content-types';
 import type { Product, ProductCategory } from './products';
 import { categories as validCategories } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 import { Resend } from 'resend';
-
-const uploadFile = async (file: File, path: string): Promise<string> => {
-    // La autenticación ya se ha verificado en el layout del administrador que protege la página.
-    // No es necesario volver a verificar aquí, lo que soluciona el problema de contexto.
-    const fileRef = ref(storage, path);
-    const snapshot = await uploadBytes(fileRef, file);
-    return getDownloadURL(snapshot.ref);
-};
 
 export async function addProductAction(formData: FormData) {
     try {
@@ -29,26 +20,12 @@ export async function addProductAction(formData: FormData) {
             return { success: false, error: 'El precio y el stock son obligatorios.' };
         }
         
-        const imageFile = formData.get('imageFile') as File | null;
-        const imageUrl = formData.get('imageUrl') as string | null;
-        const pdfFile = formData.get('pdfFile') as File | null;
+        const imageUrl = formData.get('imageUrl') as string;
+        const pdfUrl = formData.get('technicalSheetUrl') as string | null;
         const productName = formData.get('name') as string;
 
-        let finalImageUrl: string | undefined;
-
-        if (imageFile && imageFile.size > 0) {
-            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
-        } else if (imageUrl) {
-            finalImageUrl = imageUrl;
-        }
-
-        if (!finalImageUrl) {
-            return { success: false, error: 'Se requiere una imagen del producto. Proporciona una URL o sube un archivo.' };
-        }
-
-        let pdfUrl: string | undefined;
-        if (pdfFile && pdfFile.size > 0) {
-            pdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
+        if (!imageUrl) {
+            return { success: false, error: 'Se requiere una imagen del producto.' };
         }
 
         const productData: Omit<Product, 'id'> = {
@@ -61,9 +38,9 @@ export async function addProductAction(formData: FormData) {
             color: formData.get('color') as string || undefined,
             size: formData.get('size') as string || undefined,
             isFeatured: formData.get('isFeatured') === 'on',
-            imageUrl: finalImageUrl,
-            images: [finalImageUrl],
-            technicalSheetUrl: pdfUrl,
+            imageUrl: imageUrl,
+            images: [imageUrl],
+            technicalSheetUrl: pdfUrl || undefined,
             createdAt: serverTimestamp() as any, 
         };
         
@@ -74,7 +51,6 @@ export async function addProductAction(formData: FormData) {
                 delete productToSave[key];
             }
         });
-
 
         const docRef = await addDoc(collection(db, 'products'), productToSave);
         
@@ -104,9 +80,8 @@ export async function updateProductAction(formData: FormData) {
             return { success: false, error: 'El precio y el stock son obligatorios.' };
         }
 
-        const imageFile = formData.get('imageFile') as File | null;
-        const imageUrlFromForm = formData.get('imageUrl') as string | null;
-        const pdfFile = formData.get('pdfFile') as File | null;
+        const imageUrl = formData.get('imageUrl') as string;
+        const pdfUrl = formData.get('technicalSheetUrl') as string | null;
         const productName = formData.get('name') as string;
 
         const updateData: { [key: string]: any } = {
@@ -119,26 +94,12 @@ export async function updateProductAction(formData: FormData) {
             color: formData.get('color') as string || undefined,
             size: formData.get('size') as string || undefined,
             isFeatured: formData.get('isFeatured') === 'on',
+            imageUrl: imageUrl,
+            images: [imageUrl],
+            technicalSheetUrl: pdfUrl || undefined,
             updatedAt: serverTimestamp(),
         };
-
-        let finalImageUrl: string | undefined;
-
-        if (imageFile && imageFile.size > 0) {
-            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
-        } else if (imageUrlFromForm) {
-            finalImageUrl = imageUrlFromForm;
-        }
         
-        if (finalImageUrl) {
-            updateData.imageUrl = finalImageUrl;
-            updateData.images = [finalImageUrl];
-        }
-
-        if (pdfFile && pdfFile.size > 0) {
-            updateData.technicalSheetUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
-        }
-
         Object.keys(updateData).forEach(key => {
             if (updateData[key] === undefined || updateData[key] === null || updateData[key] === '') {
                 delete updateData[key];
@@ -161,6 +122,14 @@ export async function updateProductAction(formData: FormData) {
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 }
+
+// Dummy upload function for type consistency, actual upload happens client-side
+const uploadFile = async (file: File, path: string): Promise<string> => {
+    // This is now a placeholder. The actual upload logic is in the client component.
+    // It shouldn't be called from the server actions anymore.
+    console.warn("uploadFile was called from a server action. This should not happen.");
+    return "";
+};
 
 
 export async function updateHomePageContentAction(formData: FormData) {

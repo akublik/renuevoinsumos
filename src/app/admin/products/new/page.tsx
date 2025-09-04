@@ -15,37 +15,57 @@ import { addProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { categories } from '@/lib/products';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+async function uploadFile(file: File, path: string): Promise<string> {
+    const fileRef = ref(storage, path);
+    const snapshot = await uploadBytes(fileRef, file);
+    return getDownloadURL(snapshot.ref);
+}
 
 export default function NewProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
-    if (imageFile) {
-        formData.append('imageFile', imageFile);
-        formData.append('imageContentType', imageFile.type); 
-    } else if (imageUrl) {
-        formData.append('imageUrl', imageUrl);
-    } else {
-        toast({
-            title: 'Error de validación',
-            description: 'Debes proporcionar una URL de imagen o subir un archivo.',
-            variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-    }
     
     try {
+        let finalImageUrl = imageUrl;
+        if (imageFile) {
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
+        }
+
+        if (!finalImageUrl) {
+            toast({
+                title: 'Error de validación',
+                description: 'Debes proporcionar una URL de imagen o subir un archivo.',
+                variant: 'destructive',
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
+        let finalPdfUrl: string | undefined;
+        if (pdfFile) {
+            finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
+        }
+        
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        formData.set('imageUrl', finalImageUrl);
+        if (finalPdfUrl) {
+            formData.append('technicalSheetUrl', finalPdfUrl);
+        }
+        
         const result = await addProductAction(formData);
+
         if (result.success && result.productName) {
             toast({
                 title: '¡Producto Guardado!',
@@ -70,13 +90,19 @@ export default function NewProductPage() {
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
           setImageFile(e.target.files[0]);
-          setImageUrl('');
+          setImageUrl(URL.createObjectURL(e.target.files[0]));
       }
   };
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setImageUrl(e.target.value);
       setImageFile(null);
+  };
+  
+  const handlePdfFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setPdfFile(e.target.files[0]);
+      }
   };
 
   return (
@@ -156,7 +182,7 @@ export default function NewProductPage() {
             
             <div className="grid gap-3">
                 <Label>Imágen del Producto</Label>
-                <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-2">
                     <Link2 className="h-4 w-4 text-muted-foreground"/>
                     <Input 
                         type="text" 
@@ -183,7 +209,7 @@ export default function NewProductPage() {
 
             <div className="grid gap-2">
               <Label>Ficha Técnica (PDF, Opcional)</Label>
-              <Input type="file" name="pdfFile" accept=".pdf" className="cursor-pointer" />
+              <Input type="file" name="pdfFile" accept=".pdf" className="cursor-pointer" onChange={handlePdfFileChange} />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" type="reset" onClick={() => router.push('/admin/products')} disabled={isSubmitting}>Cancelar</Button>

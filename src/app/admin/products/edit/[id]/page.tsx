@@ -18,6 +18,14 @@ import { getProductById } from '@/lib/product-service';
 import type { Product } from '@/lib/products';
 import { categories } from '@/lib/products';
 import { Switch } from '@/components/ui/switch';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+async function uploadFile(file: File, path: string): Promise<string> {
+    const fileRef = ref(storage, path);
+    const snapshot = await uploadBytes(fileRef, file);
+    return getDownloadURL(snapshot.ref);
+}
 
 export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -52,26 +60,31 @@ export default function EditProductPage() {
     e.preventDefault();
     if (!product) return;
     setIsSubmitting(true);
-    const form = e.currentTarget;
-    const formData = new FormData(form);
     
-    // Add product ID to form data
-    formData.append('productId', productId);
-
-    if (imageFile) {
-        formData.append('imageFile', imageFile);
-        formData.append('imageContentType', imageFile.type); 
-    } else {
-        // If no new file is uploaded, use the existing URL.
-        // It's already in the form's 'imageUrl' input.
-    }
-    
-    if (pdfFile) {
-        formData.append('pdfFile', pdfFile);
-    }
-
     try {
+        let finalImageUrl = imageUrl;
+        if (imageFile) {
+            finalImageUrl = await uploadFile(imageFile, `products/${Date.now()}_${imageFile.name}`);
+        }
+
+        let finalPdfUrl: string | undefined = product.technicalSheetUrl;
+        if (pdfFile) {
+            finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
+        }
+
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        formData.append('productId', productId);
+        formData.set('imageUrl', finalImageUrl);
+        
+        if (finalPdfUrl) {
+            formData.append('technicalSheetUrl', finalPdfUrl);
+        } else {
+            formData.delete('pdfFile');
+        }
+        
         const result = await updateProductAction(formData);
+
         if (result.success && result.productName) {
             toast({
                 title: '¡Producto Actualizado!',
@@ -206,7 +219,7 @@ export default function EditProductPage() {
                             <Link2 className="h-4 w-4 text-muted-foreground"/>
                             <Input 
                                 type="text" 
-                                name="imageUrl"
+                                name="imageUrlInput"
                                 placeholder="Pega una URL de imagen aquí" 
                                 value={imageUrl}
                                 onChange={handleImageUrlChange}
