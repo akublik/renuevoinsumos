@@ -64,18 +64,17 @@ export default function NewProductPage() {
             finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
         
-        const formElements = form.elements as HTMLFormControlsCollection;
         const formData = new FormData();
         
-        formData.append('name', (formElements.namedItem('name') as HTMLInputElement).value);
-        formData.append('brand', (formElements.namedItem('brand') as HTMLInputElement).value);
-        formData.append('description', (formElements.namedItem('description') as HTMLTextAreaElement).value);
-        formData.append('category', (formElements.namedItem('category') as HTMLSelectElement).value);
-        formData.append('price', (formElements.namedItem('price') as HTMLInputElement).value);
-        formData.append('stock', (formElements.namedItem('stock') as HTMLInputElement).value);
-        formData.append('color', (formElements.namedItem('color') as HTMLInputElement).value);
-        formData.append('size', (formElements.namedItem('size') as HTMLInputElement).value);
-        const isFeaturedSwitch = formElements.namedItem('isFeatured') as HTMLInputElement;
+        formData.append('name', (form.elements.namedItem('name') as HTMLInputElement).value);
+        formData.append('brand', (form.elements.namedItem('brand') as HTMLInputElement).value);
+        formData.append('description', (form.elements.namedItem('description') as HTMLTextAreaElement).value);
+        formData.append('category', (form.elements.namedItem('category') as HTMLSelectElement).value);
+        formData.append('price', (form.elements.namedItem('price') as HTMLInputElement).value);
+        formData.append('stock', (form.elements.namedItem('stock') as HTMLInputElement).value);
+        formData.append('color', (form.elements.namedItem('color') as HTMLInputElement).value);
+        formData.append('size', (form.elements.namedItem('size') as HTMLInputElement).value);
+        const isFeaturedSwitch = form.elements.namedItem('isFeatured') as HTMLInputElement;
         if (isFeaturedSwitch && isFeaturedSwitch.checked) {
           formData.append('isFeatured', 'on');
         }
