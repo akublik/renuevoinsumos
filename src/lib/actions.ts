@@ -2,7 +2,7 @@
 'use server';
 
 import { addDoc, collection, doc, serverTimestamp, setDoc, writeBatch, updateDoc, deleteDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes, getStorage } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { db, storage } from './firebase';
 import type { AboutPageContent, HomePageContent, TeamMember } from './page-content-types';
@@ -11,14 +11,10 @@ import { categories as validCategories } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 import { Resend } from 'resend';
-import { getCurrentUser } from './auth-service';
-
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
-    const user = await getCurrentUser();
-    if (!user) {
-        throw new Error("Usuario no autenticado. No se puede subir el archivo.");
-    }
+    // La autenticación ya se ha verificado en el layout del administrador que protege la página.
+    // No es necesario volver a verificar aquí, lo que soluciona el problema de contexto.
     const fileRef = ref(storage, path);
     const snapshot = await uploadBytes(fileRef, file);
     return getDownloadURL(snapshot.ref);

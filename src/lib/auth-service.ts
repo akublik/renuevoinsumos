@@ -64,13 +64,3 @@ export const logoutUser = async (): Promise<void> => {
 export const onAuthStateChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
-
-// Gets the currently signed-in user, even in a server-side context.
-export const getCurrentUser = (): Promise<User | null> => {
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
-    }, reject);
-  });
-};
