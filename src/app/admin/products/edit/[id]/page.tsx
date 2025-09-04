@@ -62,11 +62,7 @@ export default function EditProductPage() {
     setIsSubmitting(true);
     
     const form = e.currentTarget;
-    if (!form) {
-        toast({ title: "Error", description: "No se encontró el formulario.", variant: "destructive" });
-        setIsSubmitting(false);
-        return;
-    }
+    const formData = new FormData(form);
     
     try {
         let finalImageUrl = imageUrl;
@@ -78,27 +74,15 @@ export default function EditProductPage() {
         if (pdfFile) {
             finalPdfUrl = await uploadFile(pdfFile, `tech-sheets/${Date.now()}_${pdfFile.name}`);
         }
-
-        const formData = new FormData();
         
-        formData.append('productId', productId);
-        formData.append('name', (form.elements.namedItem('name') as HTMLInputElement).value);
-        formData.append('brand', (form.elements.namedItem('brand') as HTMLInputElement).value);
-        formData.append('description', (form.elements.namedItem('description') as HTMLTextAreaElement).value);
-        formData.append('category', (form.elements.namedItem('category') as HTMLSelectElement).value);
-        formData.append('price', (form.elements.namedItem('price') as HTMLInputElement).value);
-        formData.append('stock', (form.elements.namedItem('stock') as HTMLInputElement).value);
-        formData.append('color', (form.elements.namedItem('color') as HTMLInputElement).value);
-        formData.append('size', (form.elements.namedItem('size') as HTMLInputElement).value);
-        const isFeaturedSwitch = form.elements.namedItem('isFeatured') as HTMLInputElement;
-        if (isFeaturedSwitch && isFeaturedSwitch.checked) {
-          formData.append('isFeatured', 'on');
-        }
-        
+        formData.set('productId', productId);
         formData.set('imageUrl', finalImageUrl);
         
         if (finalPdfUrl) {
-            formData.append('technicalSheetUrl', finalPdfUrl);
+            formData.set('technicalSheetUrl', finalPdfUrl);
+        } else {
+            // Ensure we don't send an empty file
+            formData.delete('pdfFile');
         }
         
         const result = await updateProductAction(formData);
