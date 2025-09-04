@@ -11,9 +11,13 @@ import { categories as validCategories } from './products';
 import Papa from 'papaparse';
 import type { OrderData, OrderStatus } from './orders';
 import { Resend } from 'resend';
+import { auth } from './firebase';
 
 const uploadFile = async (file: File, path: string): Promise<string> => {
-    // Content type is inferred by uploadBytes from the file extension
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error("Usuario no autenticado. No se puede subir el archivo.");
+    }
     const fileRef = ref(storage, path);
     const snapshot = await uploadBytes(fileRef, file);
     return getDownloadURL(snapshot.ref);
@@ -295,30 +299,32 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
 
         for (const row of rows) {
             try {
-                const productName = row.producto;
+                const productName = row.producto || row.Producto;
                 if (!productName) {
                     console.error('Fila omitida: falta el nombre del producto.', row);
                     errorCount++;
                     continue;
                 }
 
-                const price = parseFloat(row.precio) || 0;
-                const stock = parseInt(row.stock, 10) || 0;
-                const categoryInput = row.categoria as ProductCategory;
+                const price = parseFloat(row.precio || row.Precio) || 0;
+                const stock = parseInt(row.stock || row.Stock, 10) || 0;
+                
+                const categoryInput = (row.categoria || row.Categoria) as ProductCategory;
                 const category = validCategories.includes(categoryInput) ? categoryInput : 'INSUMOS MÉDICOS Y OTROS';
-                const imageUrl = row.imagen || `https://picsum.photos/400/400?random=${Math.random()}`;
+                
+                const imageUrl = row.imagen || row.Imagen || `https://picsum.photos/400/400?random=${Math.random()}`;
 
                 const newProduct: Omit<Product, 'id' | 'createdAt'> = {
                     name: productName,
-                    brand: row.marca,
-                    description: row.descripcion,
+                    brand: row.marca || row.Marca,
+                    description: row.descripcion || row.Descripcion,
                     category: category,
                     price: price,
                     stock: stock,
                     imageUrl: imageUrl,
                     images: [imageUrl],
-                    color: row.color || undefined,
-                    size: row.talla || undefined,
+                    color: row.color || row.Color || undefined,
+                    size: row.talla || row.Talla || undefined,
                 };
                 
                 const docRef = doc(collection(db, "products"));
@@ -347,7 +353,7 @@ export async function addProductsFromCSVAction(csvContent: string): Promise<{ su
         return { success: true, successCount, errorCount };
 
     } catch (error) {
-        console.error("Error en addProductsFromCSVAction: ", error);
+        console.error("Error in addProductsFromCSVAction: ", error);
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 }
@@ -468,3 +474,5 @@ export async function sendContactFormEmailAction(formData: FormData) {
         return { success: false, error: "No se pudo enviar el mensaje. Por favor, inténtalo de nuevo más tarde." };
     }
 }
+
+    
